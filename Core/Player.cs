@@ -11,7 +11,7 @@ namespace Ruminoid.LIVE.Core
     {
         #region Core Data
 
-        private AudioFileReader _audioFile;
+        public AudioFileReader AudioFile;
 
         public WaveOutEvent AudioOutput;
 
@@ -22,9 +22,9 @@ namespace Ruminoid.LIVE.Core
         public Player(string audioPath)
         {
             // Initialize Core
-            _audioFile = new AudioFileReader(audioPath);
+            AudioFile = new AudioFileReader(audioPath);
             AudioOutput = new WaveOutEvent();
-            AudioOutput.Init(_audioFile);
+            AudioOutput.Init(AudioFile);
         }
 
         #endregion
@@ -33,7 +33,7 @@ namespace Ruminoid.LIVE.Core
         {
             AudioOutput.Stop();
             AudioOutput?.Dispose();
-            _audioFile?.Dispose();
+            AudioFile?.Dispose();
         }
     }
 }
