@@ -136,6 +136,9 @@
     <PackageReference Include="OpenGL.Net">
       <Version>0.8.4</Version>
     </PackageReference>
+    <PackageReference Include="Ruminoid.Libraries">
+      <Version>0.2.6</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
