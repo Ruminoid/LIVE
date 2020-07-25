@@ -59,12 +59,16 @@ namespace Ruminoid.LIVE.Core
 
         private IntPtr _assStringPtr;
 
+        public int Width, Height;
+
         #endregion
 
         #region Constructor
 
         public RendererCore(string assString, int width, int height)
         {
+            Width = width;
+            Height = height;
             _assStringPtr = Marshal.StringToHGlobalAnsi(assString);
             _track = ass_read_memory(_library, _assStringPtr, assString.Length, _assCodepagePtr);
             var track = Marshal.PtrToStructure<ASS_Track>(_track);
