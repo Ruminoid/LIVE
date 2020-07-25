@@ -35,7 +35,6 @@ namespace Ruminoid.LIVE.Core
         private IntPtr _track;
         private IntPtr _event;
         private ASS_Event _eventMarshaled;
-        private IntPtr _origString = IntPtr.Zero;
 
         #endregion
 
@@ -43,7 +42,7 @@ namespace Ruminoid.LIVE.Core
 
         private IntPtr _assStringPtr;
 
-        public int Width, Height;
+        private int _width, _height;
 
         #endregion
 
@@ -51,14 +50,16 @@ namespace Ruminoid.LIVE.Core
 
         public RendererCore(string assString, int width, int height)
         {
-            Width = width;
-            Height = height;
+            // Apply User Data
+            _width = width;
+            _height = height;
+
+            // Initialize Core
             _assStringPtr = Marshal.StringToHGlobalAnsi(assString);
             _track = ass_read_memory(_library, _assStringPtr, assString.Length, _assCodepagePtr);
             var track = Marshal.PtrToStructure<ASS_Track>(_track);
             _event = track.events;
             _eventMarshaled = Marshal.PtrToStructure<ASS_Event>(_event);
-            _origString = _eventMarshaled.Text;
             ass_set_frame_size(_renderer, width, height);
         }
 
@@ -78,7 +79,6 @@ namespace Ruminoid.LIVE.Core
 
         public void Dispose()
         {
-            _eventMarshaled.Text = _origString;
             Marshal.StructureToPtr(_eventMarshaled, _event, false);
             ass_free_track(_track);
         }
