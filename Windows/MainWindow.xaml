@@ -15,11 +15,13 @@
                       UseLayoutRounding="True"
                       IsRestoringWindowPlacement="True"
                       TextOptions.TextFormattingMode="Display"
-                      SnapsToDevicePixels="True" Height="300" Width="800"
+                      SnapsToDevicePixels="True" Height="250" Width="800"
                       ResizeMode="NoResize"
                       Title="LIVE"
                       WindowStartupLocation="CenterScreen"
-                      Name="RootElement">
+                      Name="RootElement"
+                      PreviewKeyDown="MainWindow_OnPreviewKeyDown"
+                      PreviewKeyUp="MainWindow_OnPreviewKeyUp">
 
     <chrome:WindowChrome.Instance>
         <chrome:WindowChrome />
@@ -28,8 +30,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Name="WndIn">
             <Grid HorizontalAlignment="Center">
@@ -58,6 +60,9 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+        </Grid>
+        <Grid Grid.Row="1">
+            <Slider/>
         </Grid>
     </Grid>
 </controls:MetroWindow>
