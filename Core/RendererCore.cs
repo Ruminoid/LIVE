@@ -70,7 +70,7 @@ namespace Ruminoid.LIVE.Core
         public IntPtr PreRender(int milliSec)
         {
             int updated = 0;
-            return ass_render_frame(_renderer, _track, miliSec, ref updated);
+            return ass_render_frame(_renderer, _track, milliSec, ref updated);
         }
 
         #endregion

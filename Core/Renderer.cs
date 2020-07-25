@@ -54,7 +54,7 @@ namespace Ruminoid.LIVE.Core
 
         private byte[] Render(int milliSec)
         {
-            var imageRaw = _renderedData[miliSec];
+            var imageRaw = _renderedData[milliSec];
             if (imageRaw == IntPtr.Zero)
                 return new byte[_width * _height * 4];
             byte[] result = new byte[_width * _height * 4];
@@ -126,7 +126,7 @@ namespace Ruminoid.LIVE.Core
             return result;
         }
 
-        private void Send(int miliSec) => _sender.Send(Render(miliSec));
+        public void Send(int miliSec) => _sender.Send(Render(miliSec));
 
         #endregion
 
