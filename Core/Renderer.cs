@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -28,7 +29,7 @@ namespace Ruminoid.LIVE.Core
 
         #region Constructor
 
-        public Renderer(string name, string assString, int width, int height, int total)
+        public Renderer(string name, string assPath, int width, int height, int total)
         {
             // Apply User Data
             _width = width;
@@ -36,7 +37,7 @@ namespace Ruminoid.LIVE.Core
             _total = total;
 
             // Initialize Core
-            _rendererCore = new RendererCore(assString, width, height);
+            _rendererCore = new RendererCore(File.ReadAllText(assPath), width, height);
             _sender = new Sender(name, (uint)width, (uint)height);
         }
 
