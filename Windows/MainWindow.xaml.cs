@@ -38,6 +38,14 @@ namespace Ruminoid.LIVE.Windows
 
         private void OnClosing(object sender, CancelEventArgs e)
         {
+            MessageBoxResult result = MessageBox.Show(
+                "确定退出吗？",
+                "退出",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
+            if (result == MessageBoxResult.No) e.Cancel = true;
+            if (e.Cancel) return;
             ConfigHelper<Config>.SaveConfig(Config.Current);
         }
 

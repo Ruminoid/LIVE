@@ -32,8 +32,32 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Name="WndIn">
-            <Grid Name="WndOut" Background="Red" Height="50" Width="30"
-                  HorizontalAlignment="Center"/>
+            <Grid HorizontalAlignment="Center">
+                <Grid Name="WndOut" Background="{DynamicResource BackgroundBrushKey}" Width="181">
+                    <StackPanel Margin="6,0" VerticalAlignment="Center" Orientation="Horizontal">
+                        <StackPanel Margin="6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Position.MinuteDisplay}" FontSize="36"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource BorderBrushKey}" Text="M"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text=":" FontSize="36" VerticalAlignment="Center" Margin="0,0,0,20" />
+                        <StackPanel Margin="6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Position.SecondDisplay}" FontSize="36"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource BorderBrushKey}" Text="S"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="." FontSize="36" VerticalAlignment="Center" Margin="0,0,0,20" />
+                        <StackPanel Margin="6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Position.TimeCodeDisplay}" FontSize="36"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource BorderBrushKey}" Text="Code"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </controls:MetroWindow>
