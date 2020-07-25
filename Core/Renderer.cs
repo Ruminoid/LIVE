@@ -52,7 +52,7 @@ namespace Ruminoid.LIVE.Core
                 _renderedData[i] = _rendererCore.PreRender(i);
         }
 
-        private byte[] Render(int miliSec)
+        private byte[] Render(int milliSec)
         {
             var imageRaw = _renderedData[miliSec];
             if (imageRaw == IntPtr.Zero)
