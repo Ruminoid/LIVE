@@ -13,22 +13,6 @@ namespace Ruminoid.LIVE.Core
 {
     public sealed class RendererCore : IDisposable
     {
-        #region Current
-
-        private static RendererCore _current;
-
-        public static RendererCore Current
-        {
-            get => _current;
-            set
-            {
-                _current?.Dispose();
-                _current = value;
-            }
-        }
-
-        #endregion
-
         #region Ass Static Utilities
 
         private const string DefaultCodepage = "UTF-8";
@@ -76,6 +60,16 @@ namespace Ruminoid.LIVE.Core
             _eventMarshaled = Marshal.PtrToStructure<ASS_Event>(_event);
             _origString = _eventMarshaled.Text;
             ass_set_frame_size(_renderer, width, height);
+        }
+
+        #endregion
+
+        #region Methods
+
+        public IntPtr PreRender(int miliSec)
+        {
+            int updated = 0;
+            return ass_render_frame(_renderer, _track, miliSec, ref updated);
         }
 
         #endregion
