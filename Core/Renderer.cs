@@ -1,12 +1,105 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Ruminoid.Common.Renderer.LibAss;
+using static Ruminoid.Common.Renderer.LibAss.LibASSInterop;
 
 namespace Ruminoid.LIVE.Core
 {
-    class Renderer
+    public sealed class Renderer : IDisposable, INotifyPropertyChanged
     {
+        #region Current
+
+        private static Renderer _current;
+
+        public static Renderer Current
+        {
+            get => _current;
+            set
+            {
+                _current?.Dispose();
+                _current = value;
+            }
+        }
+
+        #endregion
+
+        #region Ass Static Utilities
+
+        private const string DefaultCodepage = "UTF-8";
+        private static IntPtr _library;
+        private static IntPtr _renderer;
+        private static IntPtr _assCodepagePtr;
+
+        static Renderer()
+        {
+            _library = ass_library_init();
+            _renderer = ass_renderer_init(_library);
+            _assCodepagePtr = Marshal.StringToHGlobalAnsi(DefaultCodepage);
+            ass_set_fonts(_renderer, IntPtr.Zero, "sans-serif", 1, IntPtr.Zero, 1);
+        }
+
+        #endregion
+
+        #region Ass Data
+
+        private IntPtr _track;
+        private IntPtr _event;
+        private ASS_Event _eventMarshaled;
+        private IntPtr _origString = IntPtr.Zero;
+
+        #endregion
+
+        #region User Data
+
+        private IntPtr _assStringPtr;
+
+        #endregion
+
+        #region Constructor
+
+        public Renderer(string assString, int width, int height)
+        {
+            _assStringPtr = Marshal.StringToHGlobalAnsi(assString);
+            _track = ass_read_memory(_library, _assStringPtr, assString.Length, _assCodepagePtr);
+            var track = Marshal.PtrToStructure<ASS_Track>(_track);
+            _event = track.events;
+            _eventMarshaled = Marshal.PtrToStructure<ASS_Event>(_event);
+            _origString = _eventMarshaled.Text;
+            ass_set_frame_size(_renderer, width, height);
+        }
+
+        public static void Construct() => Current = new Renderer();
+
+        public static void DeConstruct() => Current.Dispose();
+
+        #endregion
+
+        #region Dispose
+
+        public void Dispose()
+        {
+            _eventMarshaled.Text = _origString;
+            Marshal.StructureToPtr(_eventMarshaled, _event, false);
+            ass_free_track(_track);
+        }
+
+        #endregion
+
+        #region PropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
     }
 }
