@@ -17,7 +17,7 @@ namespace Ruminoid.LIVE.Core
 
         #endregion
 
-        #region DataContext
+        #region Synchro Data
 
         private bool _loaded;
 
@@ -41,6 +41,83 @@ namespace Ruminoid.LIVE.Core
                 _position = value;
                 OnPropertyChanged();
             }
+        }
+
+        #endregion
+
+        #region Core Data
+
+
+
+        #endregion
+
+        #region User Data
+
+        private string _assPath = "";
+
+        public string AssPath
+        {
+            get => _assPath;
+            set
+            {
+                _assPath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _width;
+
+        public int Width
+        {
+            get => _width;
+            set
+            {
+                _width = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _height;
+
+        public int Height
+        {
+            get => _height;
+            set
+            {
+                _height = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _audioPath = "";
+
+        public string AudioPath
+        {
+            get => _audioPath;
+            set
+            {
+                _audioPath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
+        public void Initialize(
+            string assPath,
+            int width,
+            int height,
+            string audioPath)
+        {
+            // Inject User Data
+            _assPath = assPath;
+            _width = width;
+            _height = height;
+            _audioPath = audioPath;
+
+            // Initialize Core
         }
 
         #endregion
