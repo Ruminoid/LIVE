@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Ruminoid.Common.Timing;
 
 namespace Ruminoid.LIVE.Core
@@ -18,6 +21,18 @@ namespace Ruminoid.LIVE.Core
         #endregion
 
         #region Synchro Data
+
+        private string _name;
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                OnPropertyChanged();
+            }
+        }
 
         private bool _loaded;
 
@@ -47,7 +62,9 @@ namespace Ruminoid.LIVE.Core
 
         #region Core Data
 
-
+        private Renderer _renderer;
+        private Player _player;
+        private DispatcherTimer _timer;
 
         #endregion
 
@@ -111,13 +128,81 @@ namespace Ruminoid.LIVE.Core
             int height,
             string audioPath)
         {
-            // Inject User Data
-            _assPath = assPath;
-            _width = width;
-            _height = height;
-            _audioPath = audioPath;
+            // Apply User Data
+            AssPath = assPath;
+            Width = width;
+            Height = height;
+            AudioPath = audioPath;
+
+            // Calculate Synchro Data
+            Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
+            Loaded = true;
+            long audioLength = _player.AudioFile.Length;
+            Position = new Position(audioLength);
 
             // Initialize Core
+            _player = new Player(_audioPath);
+            _renderer = new Renderer(_name, _assPath, _width, _height, (int) audioLength);
+            _timer = new DispatcherTimer(
+                TimeSpan.FromSeconds(1 / 60.0),
+                DispatcherPriority.Normal,
+                PositionUpdateTick,
+                Dispatcher.CurrentDispatcher);
+        }
+
+        private void PositionUpdateTick(object sender, EventArgs e)
+        {
+            Position.Time = _player.AudioOutput.GetPosition();
+            _renderer.Send((int) Position.Time);
+        }
+
+        public void PreRender() => _renderer.PreRender();
+
+        public void Release()
+        {
+            _timer.Stop();
+            _timer = null;
+            AssPath = "";
+            Width = 0;
+            Height = 0;
+            AudioPath = "";
+            Name = "";
+            Loaded = false;
+            Position = new Position();
+            _player.Dispose();
+            _renderer.Dispose();
+        }
+
+        public void Seek(int milliSec)
+        {
+
+        }
+
+        #endregion
+
+        #region Control Data
+
+        private bool _playing;
+
+        public bool Playing
+        {
+            get => _playing;
+            set
+            {
+                if (_playing == value) return;
+                _playing = value;
+                OnPropertyChanged();
+                if (value)
+                {
+                    _player.AudioOutput.Play();
+                    _timer.Start();
+                }
+                else
+                {
+                    _player.AudioOutput.Pause();
+                    _timer.Stop();
+                }
+            }
         }
 
         #endregion
