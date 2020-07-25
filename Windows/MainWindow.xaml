@@ -26,6 +26,14 @@
     </chrome:WindowChrome.Instance>
 
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Name="WndIn">
+            <Grid Name="WndOut" Background="Red" Height="50" Width="30"
+                  HorizontalAlignment="Center"/>
+        </Grid>
     </Grid>
 </controls:MetroWindow>

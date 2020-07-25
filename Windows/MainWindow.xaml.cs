@@ -57,21 +57,21 @@ namespace Ruminoid.LIVE.Windows
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            //if (msg == WM_NCHITTEST)
-            //{
-            //    Point p = new Point();
-            //    int pInt = lParam.ToInt32();
-            //    p.X = (pInt << 16) >> 16;
-            //    p.Y = pInt >> 16;
-            //    if (WndIn.PointFromScreen(p).Y > WndIn.ActualHeight) return IntPtr.Zero;
-            //    Point rel = WndOut.PointFromScreen(p);
-            //    if (rel.X >= 0 && rel.X <= WndOut.ActualWidth && rel.Y >= 0 && rel.Y <= WndOut.ActualHeight)
-            //    {
-            //        return IntPtr.Zero;
-            //    }
-            //    handled = true;
-            //    return new IntPtr(2);
-            //}
+            if (msg == WM_NCHITTEST)
+            {
+                Point p = new Point();
+                int pInt = lParam.ToInt32();
+                p.X = (pInt << 16) >> 16;
+                p.Y = pInt >> 16;
+                if (WndIn.PointFromScreen(p).Y > WndIn.ActualHeight) return IntPtr.Zero;
+                Point rel = WndOut.PointFromScreen(p);
+                if (rel.X >= 0 && rel.X <= WndOut.ActualWidth && rel.Y >= 0 && rel.Y <= WndOut.ActualHeight)
+                {
+                    return IntPtr.Zero;
+                }
+                handled = true;
+                return new IntPtr(2);
+            }
 
             return IntPtr.Zero;
         }
