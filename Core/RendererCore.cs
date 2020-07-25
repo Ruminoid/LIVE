@@ -11,7 +11,7 @@ using static Ruminoid.Common.Renderer.LibAss.LibASSInterop;
 
 namespace Ruminoid.LIVE.Core
 {
-    public sealed class RendererCore : IDisposable, INotifyPropertyChanged
+    public sealed class RendererCore : IDisposable
     {
         #region Current
 
@@ -87,17 +87,6 @@ namespace Ruminoid.LIVE.Core
             _eventMarshaled.Text = _origString;
             Marshal.StructureToPtr(_eventMarshaled, _event, false);
             ass_free_track(_track);
-        }
-
-        #endregion
-
-        #region PropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion
