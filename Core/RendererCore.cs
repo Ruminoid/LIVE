@@ -11,13 +11,13 @@ using static Ruminoid.Common.Renderer.LibAss.LibASSInterop;
 
 namespace Ruminoid.LIVE.Core
 {
-    public sealed class Renderer : IDisposable, INotifyPropertyChanged
+    public sealed class RendererCore : IDisposable, INotifyPropertyChanged
     {
         #region Current
 
-        private static Renderer _current;
+        private static RendererCore _current;
 
-        public static Renderer Current
+        public static RendererCore Current
         {
             get => _current;
             set
@@ -36,7 +36,7 @@ namespace Ruminoid.LIVE.Core
         private static IntPtr _renderer;
         private static IntPtr _assCodepagePtr;
 
-        static Renderer()
+        static RendererCore()
         {
             _library = ass_library_init();
             _renderer = ass_renderer_init(_library);
@@ -63,7 +63,7 @@ namespace Ruminoid.LIVE.Core
 
         #region Constructor
 
-        public Renderer(string assString, int width, int height)
+        public RendererCore(string assString, int width, int height)
         {
             _assStringPtr = Marshal.StringToHGlobalAnsi(assString);
             _track = ass_read_memory(_library, _assStringPtr, assString.Length, _assCodepagePtr);
@@ -74,7 +74,7 @@ namespace Ruminoid.LIVE.Core
             ass_set_frame_size(_renderer, width, height);
         }
 
-        public static void Construct() => Current = new Renderer();
+        public static void Construct() => Current = new RendererCore();
 
         public static void DeConstruct() => Current.Dispose();
 
