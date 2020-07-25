@@ -78,10 +78,6 @@ namespace Ruminoid.LIVE.Core
             ass_set_frame_size(_renderer, width, height);
         }
 
-        public static void Construct() => Current = new RendererCore();
-
-        public static void DeConstruct() => Current.Dispose();
-
         #endregion
 
         #region Dispose
