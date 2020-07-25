@@ -41,7 +41,7 @@ namespace Ruminoid.LIVE
 
             LIVE.Properties.Resources.Culture = CultureInfo.CurrentUICulture;
 
-            if (MainWindow is null) MainWindow = new MainWindow();
+            MainWindow ??= new MainWindow();
             MainWindow.Show();
 
             Current.Dispatcher?.Invoke(() => ThemeService.Current.ChangeTheme(Theme.Dark));
