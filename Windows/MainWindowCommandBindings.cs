@@ -15,12 +15,12 @@ namespace Ruminoid.LIVE.Windows
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            throw new NotImplementedException();
+            // Ignore
         }
 
         private void MainWindow_OnPreviewKeyUp(object sender, KeyEventArgs e)
         {
-            throw new NotImplementedException();
+            // Ignore
         }
 
         #endregion
