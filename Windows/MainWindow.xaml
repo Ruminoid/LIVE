@@ -9,6 +9,7 @@
                       xmlns:visualIcon="clr-namespace:VisualIcon;assembly=VisualIcon"
                       xmlns:sync="clr-namespace:Ruminoid.LIVE.Core"
                       xmlns:live="clr-namespace:Ruminoid.LIVE"
+                      xmlns:converters="clr-namespace:Ruminoid.Common.Converters;assembly=Ruminoid.Common"
                       mc:Ignorable="d"
                       FontFamily="Segoe UI"
                       Background="{DynamicResource ThemeBrushKey}"
@@ -28,6 +29,7 @@
         <SolidColorBrush x:Name="RenderControlBackgroundBrush"
                          x:Key="RenderControlBackgroundBrush"
                          Color="{DynamicResource BackgroundColorKey}"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     </controls:MetroWindow.Resources>
 
     <chrome:WindowChrome.Instance>
