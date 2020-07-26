@@ -50,9 +50,9 @@
                               Unchecked="LoadToggle_OnUnchecked">
                     <Grid Height="80" Width="80">
                         <visualIcon:Icon Type="DataCollection" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-2,-4,0,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                               Margin="-2,0,0,6" Text="装载" />
+                               Margin="-16,0,0,8" Text="装载" />
                     </Grid>
                 </ToggleButton>
                 <Grid Background="{DynamicResource BackgroundBrushKey}" Width="181" Height="80">
@@ -83,9 +83,9 @@
                               IsEnabled="{Binding Loaded}" IsChecked="{Binding Playing}">
                     <Grid Height="80" Width="80">
                         <visualIcon:Icon Type="Run" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-2,-4,0,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                               Margin="-2,0,0,6" Text="回放" />
+                               Margin="-16,0,0,8" Text="回放" />
                     </Grid>
                 </ToggleButton>
             </StackPanel>
@@ -96,9 +96,9 @@
                     Command="Close">
                 <Grid Height="80" Width="80">
                     <visualIcon:Icon Type="Exit" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-2,-4,0,0" />
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                               Margin="-2,0,0,6" Text="退出" />
+                               Margin="-16,0,0,8" Text="退出" />
                 </Grid>
             </Button>
         </Grid>
@@ -162,7 +162,7 @@
                       Height="120" Width="80">
                     <Grid Height="120" Width="80">
                         <visualIcon:Icon Type="SoundFile" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
                                Margin="-2,0,0,6" Text="输出" />
                     </Grid>
@@ -171,7 +171,7 @@
                       Height="120" Width="80">
                     <Grid Height="120" Width="80">
                         <visualIcon:Icon Type="CaptureFrame" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
                                Margin="-2,0,0,6" Text="渲染" />
                     </Grid>
@@ -180,7 +180,7 @@
                       Height="120" Width="80">
                     <Grid Height="120" Width="80">
                         <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
                                Margin="-2,0,0,6" Text="发送" />
                     </Grid>
