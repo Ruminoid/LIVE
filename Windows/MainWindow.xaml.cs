@@ -150,14 +150,14 @@ namespace Ruminoid.LIVE.Windows
             Synchronizer.Current.Initialize();
             ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.OrangeRed;
             Synchronizer.Current.PreRender();
-            ((SolidColorBrush)Resources["RenderControlBackgroundBrush"]).Color = Colors.Green;
+            ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.Green;
         }
 
         private void LoadToggle_OnUnchecked(object sender, RoutedEventArgs e)
         {
             Synchronizer.Current.Release();
             ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color =
-                (Color) Resources["BackgroundColorKey"];
+                Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C);
         }
 
         #endregion
