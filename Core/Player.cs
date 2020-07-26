@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NAudio.Wave;
+using Unosquare.FFME;
+using Unosquare.FFME.Common;
 
 namespace Ruminoid.LIVE.Core
 {
@@ -11,29 +13,28 @@ namespace Ruminoid.LIVE.Core
     {
         #region Core Data
 
-        private AudioFileReader _audioFile;
-
-        public WaveOutEvent AudioOutput;
+        public MediaElement MediaElement;
 
         #endregion
 
         #region Constructor
 
-        public Player(string audioPath)
+        public Player()
         {
             // Initialize Core
-            _audioFile = new AudioFileReader(audioPath);
-            AudioOutput = new WaveOutEvent();
-            AudioOutput.Init(_audioFile);
+            MediaElement = new MediaElement
+            {
+                LoadedBehavior = MediaPlaybackState.Manual,
+                UnloadedBehavior = MediaPlaybackState.Manual
+            };
         }
 
         #endregion
 
         public void Dispose()
         {
-            AudioOutput.Stop();
-            AudioOutput?.Dispose();
-            _audioFile?.Dispose();
+            MediaElement?.Close();
+            MediaElement?.Dispose();
         }
     }
 }
