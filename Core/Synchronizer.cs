@@ -122,17 +122,19 @@ namespace Ruminoid.LIVE.Core
             // Initialize Core
             _player = new Player();
             _player.MediaElement.MediaOpened += PlayerOnMediaOpened;
-            double audioLength = _player.MediaElement.Position.TotalMilliseconds;
             _player.MediaElement.PositionChanged += PlayerOnPositionChanged;
             Position.OnPositionActiveChanged += PositionOnOnPositionActiveChanged;
-            _renderer = new Renderer(_name, _assPath, _width, _height, (int)audioLength);
-
-            Loaded = true;
         }
 
         private void PositionOnOnPositionActiveChanged() => _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
 
-        private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e) => Position.Total = (long)e.Info.Duration.TotalMilliseconds;
+        private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)
+        {
+            Position.Total = (long) e.Info.Duration.TotalMilliseconds;
+            int audioLength = (int) e.Info.Duration.TotalMilliseconds;
+            _renderer = new Renderer(_name, _assPath, _width, _height, audioLength);
+            Loaded = true;
+        }
 
         private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) => Position.Time = (long)e.Position.TotalMilliseconds;
 
