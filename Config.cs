@@ -10,13 +10,43 @@ using Ruminoid.Common.Helpers;
 
 namespace Ruminoid.LIVE
 {
-    [RuminoidProduct("Dashboard")]
+    [RuminoidProduct("LIVE")]
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class Config : INotifyPropertyChanged
     {
         #region Current
 
         public static Config Current { get; set; } = ConfigHelper<Config>.OpenConfig();
+
+        #endregion
+
+        #region Render
+
+        [JsonProperty]
+        private string renderWidth = "1920";
+
+        public string RenderWidth
+        {
+            get => renderWidth;
+            set
+            {
+                renderWidth = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        private string renderHeight = "1080";
+
+        public string RenderHeight
+        {
+            get => renderHeight;
+            set
+            {
+                renderHeight = value;
+                OnPropertyChanged();
+            }
+        }
 
         #endregion
 
