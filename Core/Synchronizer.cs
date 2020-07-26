@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Ruminoid.Common.Timing;
+using Unosquare.FFME.Common;
 
 namespace Ruminoid.LIVE.Core
 {
@@ -46,17 +47,7 @@ namespace Ruminoid.LIVE.Core
             }
         }
 
-        private Position _position;
-
-        public Position Position
-        {
-            get => _position;
-            set
-            {
-                _position = value;
-                OnPropertyChanged();
-            }
-        }
+        public Position Position { get; } = new Position();
 
         #endregion
 
@@ -64,7 +55,6 @@ namespace Ruminoid.LIVE.Core
 
         private Renderer _renderer;
         private Player _player;
-        private DispatcherTimer _timer;
 
         #endregion
 
@@ -136,46 +126,47 @@ namespace Ruminoid.LIVE.Core
 
             // Calculate Synchro Data
             Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
-            Loaded = true;
-            long audioLength = _player.AudioFile.Length;
-            Position = new Position(audioLength);
 
             // Initialize Core
-            _player = new Player(_audioPath);
-            _renderer = new Renderer(_name, _assPath, _width, _height, (int) audioLength);
-            _timer = new DispatcherTimer(
-                TimeSpan.FromSeconds(1 / 60.0),
-                DispatcherPriority.Normal,
-                PositionUpdateTick,
-                Dispatcher.CurrentDispatcher);
+            _player = new Player();
+            _player.MediaElement.MediaOpened += PlayerOnMediaOpened;
+            double audioLength = _player.MediaElement.Position.TotalMilliseconds;
+            _player.MediaElement.PositionChanged += PlayerOnPositionChanged;
+            Position.OnPositionActiveChanged += PositionOnOnPositionActiveChanged;
+            _renderer = new Renderer(_name, _assPath, _width, _height, (int)audioLength);
+
+            Loaded = true;
         }
 
-        private void PositionUpdateTick(object sender, EventArgs e)
+        private void PositionOnOnPositionActiveChanged() => _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
+
+        private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)
         {
-            Position.Time = _player.AudioOutput.GetPosition();
-            _renderer.Send((int) Position.Time);
+            Position.Total = (long)e.Info.Duration.TotalMilliseconds;
+        }
+
+        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e)
+        {
+            Position.Time = (long)e.Position.TotalMilliseconds;
         }
 
         public void PreRender() => _renderer.PreRender();
 
         public void Release()
         {
-            _timer.Stop();
-            _timer = null;
             AssPath = "";
             Width = 0;
             Height = 0;
             AudioPath = "";
             Name = "";
             Loaded = false;
-            Position = new Position();
+            _player.MediaElement.MediaOpened -= PlayerOnMediaOpened;
+            _player.MediaElement.PositionChanged -= PlayerOnPositionChanged;
+            Position.OnPositionActiveChanged -= PositionOnOnPositionActiveChanged;
+            Position.Time = 0;
+            Position.Total = 0;
             _player.Dispose();
             _renderer.Dispose();
-        }
-
-        public void Seek(int milliSec)
-        {
-
         }
 
         #endregion
@@ -193,15 +184,9 @@ namespace Ruminoid.LIVE.Core
                 _playing = value;
                 OnPropertyChanged();
                 if (value)
-                {
-                    _player.AudioOutput.Play();
-                    _timer.Start();
-                }
+                    _player.MediaElement.Play();
                 else
-                {
-                    _player.AudioOutput.Pause();
-                    _timer.Stop();
-                }
+                    _player.MediaElement.Pause();
             }
         }
 
