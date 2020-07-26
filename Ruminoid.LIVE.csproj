@@ -151,6 +151,9 @@
     <PackageReference Include="Ruminoid.Libraries">
       <Version>0.2.6</Version>
     </PackageReference>
+    <PackageReference Include="WindowsAPICodePack-Shell">
+      <Version>1.1.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
