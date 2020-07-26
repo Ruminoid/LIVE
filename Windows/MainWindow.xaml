@@ -33,9 +33,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Name="WndIn">
-            <Grid HorizontalAlignment="Center">
-                <Grid Name="WndOut" Background="{DynamicResource BackgroundBrushKey}" Width="181">
+        <Grid Grid.Row="0" Name="WndCaption">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="Wnd1" Width="80" Height="80"/>
+                <Grid Background="{DynamicResource BackgroundBrushKey}" Width="181" Height="80">
                     <StackPanel Margin="6,0" VerticalAlignment="Center" Orientation="Horizontal">
                         <StackPanel Margin="6,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Position.MinuteDisplay}" FontSize="36"
@@ -59,7 +65,18 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
-            </Grid>
+                <Button Name="Wnd2" Width="80" Height="80"/>
+            </StackPanel>
+            <Button Name="Wnd3" Grid.Column="2"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Width="80" Height="80">
+                <Grid Height="80" Width="80">
+                    <visualIcon:Icon Type="Run" Width="35" Height="35" Size="2"
+                                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                   Margin="-2,0,0,6" Text="退出" />
+                </Grid>
+            </Button>
         </Grid>
         <Grid Grid.Row="1">
             <Slider/>

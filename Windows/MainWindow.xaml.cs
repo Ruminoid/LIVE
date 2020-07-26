@@ -57,25 +57,36 @@ namespace Ruminoid.LIVE.Windows
         {
             IntPtr hwnd = new WindowInteropHelper(this).Handle;
             HwndSource.FromHwnd(hwnd)?.AddHook(WndProc);
+
+            wndList = new List<FrameworkElement>
+            {
+                Wnd1, Wnd2, Wnd3
+            };
         }
 
         #endregion
 
         #region CaptionBar Hook
 
+        private List<FrameworkElement> wndList;
+
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (msg == WM_NCHITTEST)
             {
+                if (wndList is null) return IntPtr.Zero;
                 Point p = new Point();
                 int pInt = lParam.ToInt32();
                 p.X = (pInt << 16) >> 16;
                 p.Y = pInt >> 16;
-                if (WndIn.PointFromScreen(p).Y > WndIn.ActualHeight) return IntPtr.Zero;
-                Point rel = WndOut.PointFromScreen(p);
-                if (rel.X >= 0 && rel.X <= WndOut.ActualWidth && rel.Y >= 0 && rel.Y <= WndOut.ActualHeight)
+                if (WndCaption.PointFromScreen(p).Y > WndCaption.ActualHeight) return IntPtr.Zero;
+                foreach (FrameworkElement element in wndList)
                 {
-                    return IntPtr.Zero;
+                    Point rel = element.PointFromScreen(p);
+                    if (rel.X >= 0 && rel.X <= element.ActualWidth && rel.Y >= 0 && rel.Y <= element.ActualHeight)
+                    {
+                        return IntPtr.Zero;
+                    }
                 }
                 handled = true;
                 return new IntPtr(2);
