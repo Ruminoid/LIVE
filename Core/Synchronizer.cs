@@ -23,12 +23,12 @@ namespace Ruminoid.LIVE.Core
 
         #region Synchro Data
 
-        private string _name;
+        private string _name = "";
 
         public string Name
         {
             get => _name;
-            set
+            private set
             {
                 _name = value;
                 OnPropertyChanged();
@@ -112,18 +112,8 @@ namespace Ruminoid.LIVE.Core
 
         #region Methods
 
-        public void Initialize(
-            string assPath,
-            int width,
-            int height,
-            string audioPath)
+        public void Initialize()
         {
-            // Apply User Data
-            AssPath = assPath;
-            Width = width;
-            Height = height;
-            AudioPath = audioPath;
-
             // Calculate Synchro Data
             Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
 
@@ -140,15 +130,9 @@ namespace Ruminoid.LIVE.Core
 
         private void PositionOnOnPositionActiveChanged() => _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
 
-        private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)
-        {
-            Position.Total = (long)e.Info.Duration.TotalMilliseconds;
-        }
+        private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e) => Position.Total = (long)e.Info.Duration.TotalMilliseconds;
 
-        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e)
-        {
-            Position.Time = (long)e.Position.TotalMilliseconds;
-        }
+        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) => Position.Time = (long)e.Position.TotalMilliseconds;
 
         public void PreRender() => _renderer.PreRender();
 
