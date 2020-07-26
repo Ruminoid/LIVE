@@ -136,6 +136,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FFME.Windows">
+      <Version>4.2.330</Version>
+    </PackageReference>
     <PackageReference Include="NAudio">
       <Version>1.10.0</Version>
     </PackageReference>
