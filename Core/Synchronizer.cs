@@ -114,6 +114,8 @@ namespace Ruminoid.LIVE.Core
 
         public void Initialize()
         {
+            if (Loaded) return;
+
             // Calculate Synchro Data
             Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
 
@@ -138,6 +140,8 @@ namespace Ruminoid.LIVE.Core
 
         public void Release()
         {
+            if (!Loaded) return;
+
             AssPath = "";
             Width = 0;
             Height = 0;
