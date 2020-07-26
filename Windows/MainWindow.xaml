@@ -6,8 +6,9 @@
                       xmlns:local="clr-namespace:Ruminoid.LIVE.Windows"
                       xmlns:chrome="http://schemes.grabacr.net/winfx/2014/chrome"
                       xmlns:controls="http://schemes.grabacr.net/winfx/2014/controls"
-                      xmlns:yDock="clr-namespace:YDock;assembly=YDock"
                       xmlns:visualIcon="clr-namespace:VisualIcon;assembly=VisualIcon"
+                      xmlns:sync="clr-namespace:Ruminoid.LIVE.Core"
+                      xmlns:live="clr-namespace:Ruminoid.LIVE"
                       mc:Ignorable="d"
                       FontFamily="Segoe UI"
                       Background="{DynamicResource ThemeBrushKey}"
@@ -15,7 +16,7 @@
                       UseLayoutRounding="True"
                       IsRestoringWindowPlacement="True"
                       TextOptions.TextFormattingMode="Display"
-                      SnapsToDevicePixels="True" Height="250" Width="800"
+                      SnapsToDevicePixels="True" Height="230" Width="800"
                       ResizeMode="NoResize"
                       Title="LIVE"
                       WindowStartupLocation="CenterScreen"
@@ -23,24 +24,35 @@
                       PreviewKeyDown="MainWindow_OnPreviewKeyDown"
                       PreviewKeyUp="MainWindow_OnPreviewKeyUp">
 
+    <controls:MetroWindow.Resources>
+        <SolidColorBrush x:Name="RenderControlBackgroundBrush"
+                         x:Key="RenderControlBackgroundBrush"
+                         Color="{DynamicResource BackgroundColorKey}"/>
+    </controls:MetroWindow.Resources>
+
     <chrome:WindowChrome.Instance>
         <chrome:WindowChrome />
     </chrome:WindowChrome.Instance>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Name="WndCaption">
+    <StackPanel DataContext="{x:Static sync:Synchronizer.Current}">
+        <Grid Name="WndCaption" Height="80">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Name="Wnd1" Width="80" Height="80"/>
+                <ToggleButton Name="Wnd1" Width="80" Height="80"
+                              IsChecked="{Binding Loaded, Mode=OneWay}"
+                              Checked="LoadToggle_OnChecked"
+                              Unchecked="LoadToggle_OnUnchecked">
+                    <Grid Height="80" Width="80">
+                        <visualIcon:Icon Type="DataCollection" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Margin="-2,0,0,6" Text="装载" />
+                    </Grid>
+                </ToggleButton>
                 <Grid Background="{DynamicResource BackgroundBrushKey}" Width="181" Height="80">
                     <StackPanel Margin="6,0" VerticalAlignment="Center" Orientation="Horizontal">
                         <StackPanel Margin="6,0" VerticalAlignment="Center">
@@ -65,21 +77,113 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
-                <Button Name="Wnd2" Width="80" Height="80"/>
+                <ToggleButton Name="Wnd2" Width="80" Height="80"
+                              IsEnabled="{Binding Loaded}" IsChecked="{Binding Playing}">
+                    <Grid Height="80" Width="80">
+                        <visualIcon:Icon Type="Run" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Margin="-2,0,0,6" Text="回放" />
+                    </Grid>
+                </ToggleButton>
             </StackPanel>
             <Button Name="Wnd3" Grid.Column="2"
                     HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Width="80" Height="80">
+                    Width="80" Height="80"
+                    IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}"
+                    Command="Close">
                 <Grid Height="80" Width="80">
-                    <visualIcon:Icon Type="Run" Width="35" Height="35" Size="2"
-                                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                    <visualIcon:Icon Type="Exit" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                   Margin="-2,0,0,6" Text="退出" />
+                               Margin="-2,0,0,6" Text="退出" />
                 </Grid>
             </Button>
         </Grid>
-        <Grid Grid.Row="1">
-            <Slider/>
+        <Grid Height="30">
+            <Slider Margin="6"
+                    Minimum="0" Maximum="1"
+                    IsEnabled="{Binding Loaded}"
+                    Value="{Binding Position.Percentage}"
+                    IsMoveToPointEnabled="True" />
         </Grid>
-    </Grid>
+        <Grid Height="120">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <StackPanel>
+                    <Grid Margin="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="音频: "/>
+                        <TextBlock Grid.Column="1" Text="{Binding AudioPath}"/>
+                        <Button Margin="6,0" Grid.Column="2" Content="…"
+                                Tag="AudioPath" Click="ChooseFileButtonBase_OnClick"/>
+                    </Grid>
+                    <Grid Margin="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="渲染大小: "/>
+                        <StackPanel Orientation="Horizontal" Grid.Column="1"
+                                    DataContext="{x:Static live:Config.Current}"
+                                    HorizontalAlignment="Center">
+                            <TextBox Text="{Binding RenderWidth, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80"/>
+                            <TextBlock Text="x" Margin="8,0"/>
+                            <TextBox Text="{Binding RenderHeight, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Margin="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="ASS字幕: "/>
+                        <TextBlock Grid.Column="1" Text="{Binding AssPath}"/>
+                        <Button Margin="6,0" Grid.Column="2" Content="…"
+                                Tag="AssPath" Click="ChooseFileButtonBase_OnClick"/>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <StackPanel Orientation="Horizontal"
+                        Grid.Column="1">
+                <Grid Background="{DynamicResource BackgroundBrushKey}"
+                      Height="120" Width="80">
+                    <Grid Height="120" Width="80">
+                        <visualIcon:Icon Type="SoundFile" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Margin="-2,0,0,6" Text="输出" />
+                    </Grid>
+                </Grid>
+                <Grid Background="{DynamicResource RenderControlBackgroundBrush}"
+                      Height="120" Width="80">
+                    <Grid Height="120" Width="80">
+                        <visualIcon:Icon Type="CaptureFrame" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Margin="-2,0,0,6" Text="渲染" />
+                    </Grid>
+                </Grid>
+                <Grid Background="{DynamicResource BackgroundBrushKey}"
+                      Height="120" Width="80">
+                    <Grid Height="120" Width="80">
+                        <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,0" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Margin="-2,0,0,6" Text="发送" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
 </controls:MetroWindow>
