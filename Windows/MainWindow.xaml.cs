@@ -145,12 +145,13 @@ namespace Ruminoid.LIVE.Windows
                 return;
             }
 
+            Wnd1.IsEnabled = false;
             Synchronizer.Current.Width = width;
             Synchronizer.Current.Height = height;
-            Synchronizer.Current.Initialize();
             ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.OrangeRed;
-            Synchronizer.Current.PreRender();
+            Synchronizer.Current.Initialize();
             ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.Green;
+            Wnd1.IsEnabled = true;
         }
 
         private void LoadToggle_OnUnchecked(object sender, RoutedEventArgs e)

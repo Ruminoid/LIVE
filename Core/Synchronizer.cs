@@ -133,12 +133,11 @@ namespace Ruminoid.LIVE.Core
             Position.Total = (long) e.Info.Duration.TotalMilliseconds;
             int audioLength = (int) e.Info.Duration.TotalMilliseconds;
             _renderer = new Renderer(_name, _assPath, _width, _height, audioLength);
+            _renderer.PreRender();
             Loaded = true;
         }
 
         private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) => Position.Time = (long)e.Position.TotalMilliseconds;
-
-        public void PreRender() => _renderer.PreRender();
 
         public void Release()
         {
