@@ -88,6 +88,7 @@ namespace Ruminoid.LIVE.Windows
             #endregion
 
             Synchronizer.Current.StateChanged += ChangeState;
+            Synchronizer.Current.InitializeCompleted += InitializeCompleted;
         }
 
         #endregion
@@ -180,6 +181,10 @@ namespace Ruminoid.LIVE.Windows
             Synchronizer.Current.MinRenderFrame = minRenderFrame * 60;
             Synchronizer.Current.MaxRenderFrame = maxRenderFrame * 60;
             Synchronizer.Current.Initialize();
+        }
+
+        private void InitializeCompleted(object sender, EventArgs e)
+        {
             Wnd1.IsEnabled = true;
         }
 
