@@ -51,6 +51,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Config.cs" />
+    <Compile Include="Core\MemoryMonitor.cs" />
     <Compile Include="Core\Player.cs" />
     <Compile Include="Core\Renderer.cs" />
     <Compile Include="Core\RendererCore.cs" />
