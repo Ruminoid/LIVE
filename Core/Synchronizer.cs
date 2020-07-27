@@ -206,10 +206,6 @@ namespace Ruminoid.LIVE.Core
         {
             if (!Loaded) return;
 
-            AssPath = "";
-            Width = 0;
-            Height = 0;
-            AudioPath = "";
             Name = "";
             Loaded = false;
             _player.MediaElement.MediaOpened -= PlayerOnMediaOpened;
