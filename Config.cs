@@ -49,7 +49,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string memSize = "600";
+        private string memSize = "500";
 
         public string MemSize
         {
@@ -62,7 +62,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string minRenderTime = "3";
+        private string minRenderTime = "15";
 
         public string MinRenderFrame
         {
@@ -75,7 +75,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string maxRenderTime = "15";
+        private string maxRenderTime = "35";
 
         public string MaxRenderFrame
         {
