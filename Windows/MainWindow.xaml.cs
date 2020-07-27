@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,7 +19,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Ruminoid.Common.Helpers;
+using Ruminoid.Common.Utilities;
 using Ruminoid.LIVE.Core;
+using Path = System.IO.Path;
 
 namespace Ruminoid.LIVE.Windows
 {
@@ -83,6 +86,8 @@ namespace Ruminoid.LIVE.Windows
             };
 
             #endregion
+
+            Synchronizer.Current.StateChanged += ChangeState;
         }
 
         #endregion
@@ -120,17 +125,40 @@ namespace Ruminoid.LIVE.Windows
 
         #endregion
 
+        #region Utilities
+
+        private void ChangeState(object sender, KeyValuePair<string, WorkingState> e)
+        {
+            ((SolidColorBrush)Resources[$"{e.Key}ControlBackgroundBrush"]).Color =
+                e.Value switch
+                {
+                    WorkingState.Working => Colors.DarkOrange,
+                    WorkingState.Completed => Colors.Green,
+                    WorkingState.Failed => Colors.Red,
+                    _ => Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C)
+                };
+        }
+
+        #endregion
+
         #region Event Processor
 
         private void LoadToggle_OnChecked(object sender, RoutedEventArgs e)
         {
             ToggleButton toggle = sender as ToggleButton;
+            if (toggle is null) return;
             string err = "";
-            int width = 0, height = 0;
+            int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0;
             if (!int.TryParse(Config.Current.RenderWidth, out width) ||
                 !int.TryParse(Config.Current.RenderHeight, out height)) err = "渲染大小格式有误";
             if (err == "" && (width % 2 != 0 || height % 2 != 0 || width <= 0 || height <= 0))
                 err = "渲染大小不正确";
+            if (!int.TryParse(Config.Current.MemSize, out memSize)) err = "内存大小格式有误";
+            if (!int.TryParse(Config.Current.MinRenderFrame, out minRenderFrame) ||
+                !int.TryParse(Config.Current.MaxRenderFrame, out maxRenderFrame))
+                err = "渲染缓冲时间格式不正确";
+            if (err == "" && memSize < 300) err = "预留内存过小";
+            if (err == "" && minRenderFrame <= 0 || maxRenderFrame <= 0) err = "渲染缓冲时间过小";
             if (!File.Exists(Synchronizer.Current.AudioPath)) err = "音频文件路径有误";
             if (!File.Exists(Synchronizer.Current.AssPath)) err = "ASS字幕文件路径有误";
             if (err != "")
@@ -148,20 +176,17 @@ namespace Ruminoid.LIVE.Windows
             Wnd1.IsEnabled = false;
             Synchronizer.Current.Width = width;
             Synchronizer.Current.Height = height;
-            ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.OrangeRed;
+            Synchronizer.Current.MemSize = memSize;
+            Synchronizer.Current.MinRenderFrame = minRenderFrame * 60;
+            Synchronizer.Current.MaxRenderFrame = maxRenderFrame * 60;
             Synchronizer.Current.Initialize();
-            ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color = Colors.Green;
             Wnd1.IsEnabled = true;
         }
 
         private void LoadToggle_OnUnchecked(object sender, RoutedEventArgs e)
         {
             Synchronizer.Current.Release();
-            ((SolidColorBrush) Resources["RenderControlBackgroundBrush"]).Color =
-                Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C);
         }
-
-        #endregion
 
         private void ChooseFileButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
@@ -202,5 +227,10 @@ namespace Ruminoid.LIVE.Windows
                     break;
             }
         }
+
+        private void SpoutInstallButtonBase_OnClick(object sender, RoutedEventArgs e) =>
+            Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Libraries/OBS_Spout_Installer.exe"));
+
+        #endregion
     }
 }
