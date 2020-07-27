@@ -277,7 +277,8 @@
                         </Grid>
                     </StackPanel>
                 </Grid>
-                <Grid Grid.Column="1">
+                <Grid Grid.Column="1"
+                      DataContext="{x:Static live:Config.Current}">
                     <StackPanel>
                         <TextBlock Margin="6" TextWrapping="Wrap"
                                    Text="更大的平均值意味着更大的缓存，更小的差值意味着更频繁的渲染。" />
