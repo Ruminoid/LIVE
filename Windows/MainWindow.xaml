@@ -115,8 +115,15 @@
                 </Grid>
             </Button>
         </Grid>
-        <StackPanel Height="150">
-            <Grid Height="150">
+        <Grid Height="30">
+            <Slider Margin="6"
+                    Minimum="0" Maximum="1"
+                    IsEnabled="{Binding Loaded}"
+                    Value="{Binding Position.Percentage}"
+                    IsMoveToPointEnabled="True" />
+        </Grid>
+        <StackPanel Height="120">
+            <Grid Height="120">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible" />
@@ -127,122 +134,113 @@
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
-                <Grid Height="30">
-                    <Slider Margin="6"
-                            Minimum="0" Maximum="1"
-                            IsEnabled="{Binding Loaded}"
-                            Value="{Binding Position.Percentage}"
-                            IsMoveToPointEnabled="True" />
-                </Grid>
-                <Grid Height="120">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid Grid.Column="0">
-                        <StackPanel>
-                            <Grid Margin="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="音频: " />
-                                <TextBlock Grid.Column="1" Text="{Binding AudioPath}" />
-                                <Button Margin="6,0" Grid.Column="2" Content="…"
-                                        Tag="AudioPath" Click="ChooseFileButtonBase_OnClick"
-                                        IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}" />
-                            </Grid>
-                            <Grid Margin="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="渲染大小: " />
-                                <StackPanel Orientation="Horizontal" Grid.Column="1"
-                                            DataContext="{x:Static live:Config.Current}"
-                                            HorizontalAlignment="Center">
-                                    <TextBox Text="{Binding RenderWidth, UpdateSourceTrigger=PropertyChanged}"
-                                             Width="80" />
-                                    <TextBlock Text="x" Margin="8,0" />
-                                    <TextBox Text="{Binding RenderHeight, UpdateSourceTrigger=PropertyChanged}"
-                                             Width="80" />
-                                </StackPanel>
-                            </Grid>
-                            <Grid Margin="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="ASS字幕: " />
-                                <TextBlock Grid.Column="1" Text="{Binding AssPath}" />
-                                <Button Margin="6,0" Grid.Column="2" Content="…"
-                                        Tag="AssPath" Click="ChooseFileButtonBase_OnClick"
-                                        IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}" />
-                            </Grid>
-                        </StackPanel>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal"
-                                Grid.Column="1">
-                        <Grid Background="{DynamicResource BackgroundBrushKey}"
-                              Height="120" Width="80">
-                            <Grid Height="120" Width="80">
-                                <visualIcon:Icon Type="SoundFile" Width="35" Height="35" Size="2"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                           Margin="-2,0,0,6" Text="输出" />
-                            </Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <StackPanel>
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="音频: " />
+                            <TextBlock Grid.Column="1" Text="{Binding AudioPath}" />
+                            <Button Margin="6,0" Grid.Column="2" Content="…"
+                                    Tag="AudioPath" Click="ChooseFileButtonBase_OnClick"
+                                    IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}" />
                         </Grid>
-                        <Grid Background="{DynamicResource MemoryControlBackgroundBrush}"
-                              Height="120" Width="80">
-                            <Grid Height="120" Width="80">
-                                <visualIcon:Icon Type="Memory" Width="35" Height="35" Size="2"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                           Margin="-2,0,0,6" Text="内存" />
-                            </Grid>
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="渲染大小: " />
+                            <StackPanel Orientation="Horizontal" Grid.Column="1"
+                                        DataContext="{x:Static live:Config.Current}"
+                                        HorizontalAlignment="Center">
+                                <TextBox Text="{Binding RenderWidth, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="80" />
+                                <TextBlock Text="x" Margin="8,0" />
+                                <TextBox Text="{Binding RenderHeight, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="80" />
+                            </StackPanel>
                         </Grid>
-                        <Grid Background="{DynamicResource PurgeControlBackgroundBrush}"
-                              Height="120" Width="80">
-                            <Grid Height="120" Width="80">
-                                <visualIcon:Icon Type="Performance" Width="35" Height="35" Size="2"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                           Margin="-2,0,0,6" Text="释放" />
-                            </Grid>
-                        </Grid>
-                        <Grid Background="{DynamicResource RenderControlBackgroundBrush}"
-                              Height="120" Width="80">
-                            <Grid Height="120" Width="80">
-                                <visualIcon:Icon Type="CaptureFrame" Width="35" Height="35" Size="2"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                           Margin="-2,0,0,6" Text="渲染" />
-                            </Grid>
-                        </Grid>
-                        <Grid Height="120" Width="80">
-                            <Grid.Style>
-                                <Style TargetType="Grid">
-                                    <Setter Property="Background" Value="{DynamicResource BackgroundBrushKey}" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Loaded}">
-                                            <Setter Property="Background" Value="DarkOrange" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Grid.Style>
-                            <Grid Height="120" Width="80">
-                                <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                           Margin="-2,0,0,6" Text="发送" />
-                            </Grid>
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="ASS字幕: " />
+                            <TextBlock Grid.Column="1" Text="{Binding AssPath}" />
+                            <Button Margin="6,0" Grid.Column="2" Content="…"
+                                    Tag="AssPath" Click="ChooseFileButtonBase_OnClick"
+                                    IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}" />
                         </Grid>
                     </StackPanel>
                 </Grid>
+                <StackPanel Orientation="Horizontal"
+                            Grid.Column="1">
+                    <Grid Background="{DynamicResource BackgroundBrushKey}"
+                          Height="120" Width="80">
+                        <Grid Height="120" Width="80">
+                            <visualIcon:Icon Type="SoundFile" Width="35" Height="35" Size="2"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                       Margin="-2,0,0,6" Text="输出" />
+                        </Grid>
+                    </Grid>
+                    <Grid Background="{DynamicResource MemoryControlBackgroundBrush}"
+                          Height="120" Width="80">
+                        <Grid Height="120" Width="80">
+                            <visualIcon:Icon Type="Memory" Width="35" Height="35" Size="2"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                       Margin="-2,0,0,6" Text="内存" />
+                        </Grid>
+                    </Grid>
+                    <Grid Background="{DynamicResource PurgeControlBackgroundBrush}"
+                          Height="120" Width="80">
+                        <Grid Height="120" Width="80">
+                            <visualIcon:Icon Type="Performance" Width="35" Height="35" Size="2"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                       Margin="-2,0,0,6" Text="释放" />
+                        </Grid>
+                    </Grid>
+                    <Grid Background="{DynamicResource RenderControlBackgroundBrush}"
+                          Height="120" Width="80">
+                        <Grid Height="120" Width="80">
+                            <visualIcon:Icon Type="CaptureFrame" Width="35" Height="35" Size="2"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                       Margin="-2,0,0,6" Text="渲染" />
+                        </Grid>
+                    </Grid>
+                    <Grid Height="120" Width="80">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Background" Value="{DynamicResource BackgroundBrushKey}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Loaded}">
+                                        <Setter Property="Background" Value="DarkOrange" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid Height="120" Width="80">
+                            <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                       Margin="-2,0,0,6" Text="发送" />
+                        </Grid>
+                    </Grid>
+                </StackPanel>
             </Grid>
-            <Grid Height="150">
+            <Grid Height="120">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed" />
