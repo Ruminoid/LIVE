@@ -75,7 +75,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string maxRenderTime = "3";
+        private string maxRenderTime = "15";
 
         public string MaxRenderFrame
         {
