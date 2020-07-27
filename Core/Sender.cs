@@ -17,9 +17,7 @@ namespace Ruminoid.LIVE.Core
 
         static Sender()
         {
-            _deviceContext = DeviceContext.Create();
-            _glContext = _deviceContext.CreateContext(IntPtr.Zero);
-            _deviceContext.MakeCurrent(_glContext);
+            
         }
 
         #endregion
@@ -43,6 +41,14 @@ namespace Ruminoid.LIVE.Core
             // Inject User Data
             _width = width;
             _height = height;
+
+            // Initialize Static Core
+            if (_deviceContext is null)
+            {
+                _deviceContext = DeviceContext.Create();
+                _glContext = _deviceContext.CreateContext(IntPtr.Zero);
+                _deviceContext.MakeCurrent(_glContext);
+            }
 
             // Initialize Core
             _sender = new SpoutSender();
