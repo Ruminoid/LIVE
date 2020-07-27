@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -278,7 +279,7 @@ namespace Ruminoid.LIVE.Core
                     Thread.Sleep(5000);
                     _purgeIndex = 0;
                 }
-                Marshal.FreeHGlobal(_renderedData[_purgeIndex]);
+                FreeImageData(_renderedData[_purgeIndex]);
                 _renderedData[_purgeIndex] = IntPtr.Zero;
                 _purgeIndex++;
             }
@@ -328,6 +329,23 @@ namespace Ruminoid.LIVE.Core
 
         #endregion
 
+        #region Utilities
+
+        private void FreeImageData(IntPtr ptr)
+        {
+            IntPtr p = ptr;
+            Collection<IntPtr> ptrs = new Collection<IntPtr>();
+            while (p != IntPtr.Zero)
+            {
+                ptrs.Add(p);
+                p = Marshal.PtrToStructure<ASS_Image>(p).next;
+            }
+
+            foreach (IntPtr intPtr in ptrs) Marshal.FreeHGlobal(intPtr);
+        }
+
+        #endregion
+
         #region Dispose
 
         public void Dispose()
@@ -347,7 +365,7 @@ namespace Ruminoid.LIVE.Core
             _sender?.Dispose();
             for (int i = 0; i < _total; i++)
                 if (_renderedData[i] != IntPtr.Zero)
-                    Marshal.FreeHGlobal(_renderedData[i]);
+                    FreeImageData(_renderedData[i]);
         }
 
         #endregion
