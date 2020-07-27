@@ -275,6 +275,10 @@
                             <TextBox Text="{Binding MemSize, UpdateSourceTrigger=PropertyChanged}"
                                      Width="80" Grid.Column="1" HorizontalAlignment="Left" />
                         </Grid>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <StackPanel>
                         <TextBlock Margin="6" TextWrapping="Wrap"
                                    Text="更大的平均值意味着更大的缓存，更小的差值意味着更频繁的渲染。" />
                         <Grid Margin="6">
@@ -292,11 +296,8 @@
                                          Width="80" />
                             </StackPanel>
                         </Grid>
-                    </StackPanel>
-                </Grid>
-                <Grid Grid.Column="1">
-                    <StackPanel>
                         <Button Margin="6" Content="安装 OBS Spout 插件"
+                                HorizontalAlignment="Left" Padding="12"
                                 Click="SpoutInstallButtonBase_OnClick" />
                     </StackPanel>
                 </Grid>
