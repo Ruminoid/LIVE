@@ -62,7 +62,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string minRenderTime = "15";
+        private string minRenderTime = "50";
 
         public string MinRenderFrame
         {
@@ -75,7 +75,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string maxRenderTime = "35";
+        private string maxRenderTime = "60";
 
         public string MaxRenderFrame
         {
