@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Ruminoid.Common.Utilities;
 
 namespace Ruminoid.LIVE.Core
@@ -49,18 +49,21 @@ namespace Ruminoid.LIVE.Core
 
             // Initialize Core
             _currentProcess = Process.GetCurrentProcess();
-            _timer = new Timer(
-                TimerCallback,
-                null,
-                2000,
-                Timeout.Infinite);
+            //_timer = new Timer(
+            //    TimerCallback,
+            //    null,
+            //    2000,
+            //    Timeout.Infinite);
+            _timer = new Timer(2000);
+            _timer.Elapsed += Tick;
+            _timer.Start();
         }
 
         #endregion
 
         #region Methods
 
-        private void TimerCallback(object state)
+        private void Tick(object sender, ElapsedEventArgs e)
         {
             double mem = getMemory();
 
@@ -85,6 +88,8 @@ namespace Ruminoid.LIVE.Core
         public void Dispose()
         {
             _currentProcess?.Dispose();
+            _timer.Stop();
+            _timer.Elapsed -= Tick;
             _timer?.Dispose();
         }
 
