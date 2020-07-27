@@ -48,6 +48,45 @@ namespace Ruminoid.LIVE
             }
         }
 
+        [JsonProperty]
+        private string memSize = "600";
+
+        public string MemSize
+        {
+            get => memSize;
+            set
+            {
+                memSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        private string minRenderTime = "3";
+
+        public string MinRenderFrame
+        {
+            get => minRenderTime;
+            set
+            {
+                minRenderTime = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        private string maxRenderTime = "3";
+
+        public string MaxRenderFrame
+        {
+            get => maxRenderTime;
+            set
+            {
+                maxRenderTime = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region PropertyChanged
