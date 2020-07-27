@@ -345,6 +345,9 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor?.Dispose();
             _rendererCore?.Dispose();
             _sender?.Dispose();
+            for (int i = 0; i < _total; i++)
+                if (_renderedData[i] != IntPtr.Zero)
+                    Marshal.FreeHGlobal(_renderedData[i]);
         }
 
         #endregion
