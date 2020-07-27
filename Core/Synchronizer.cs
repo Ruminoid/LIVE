@@ -153,6 +153,9 @@ namespace Ruminoid.LIVE.Core
         {
             if (Loaded) return;
 
+            // Start Initialize
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Working));
+
             // Calculate Synchro Data
             Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
 
@@ -182,6 +185,8 @@ namespace Ruminoid.LIVE.Core
             _renderer.StateChanged += RendererOnStateChanged;
             Loaded = true;
             InitializeCompleted?.Invoke(this, EventArgs.Empty);
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", WorkingState.Working));
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Completed));
         }
 
         private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
@@ -215,6 +220,10 @@ namespace Ruminoid.LIVE.Core
             _player.Dispose();
             _renderer.StateChanged -= RendererOnStateChanged;
             _renderer.Dispose();
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Memory", WorkingState.Unknown));
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", WorkingState.Unknown));
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Unknown));
+            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
         }
 
         #endregion

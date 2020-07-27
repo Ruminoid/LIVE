@@ -32,6 +32,8 @@
                          Color="{DynamicResource BackgroundColorKey}" />
         <SolidColorBrush x:Key="PurgeControlBackgroundBrush"
                          Color="{DynamicResource BackgroundColorKey}" />
+        <SolidColorBrush x:Key="SenderControlBackgroundBrush"
+                         Color="{DynamicResource BackgroundColorKey}" />
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
     </controls:MetroWindow.Resources>
 
@@ -224,17 +226,8 @@
                                        Margin="-2,0,0,6" Text="渲染" />
                         </Grid>
                     </Grid>
-                    <Grid Height="120" Width="80">
-                        <Grid.Style>
-                            <Style TargetType="Grid">
-                                <Setter Property="Background" Value="{DynamicResource BackgroundBrushKey}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Loaded}">
-                                        <Setter Property="Background" Value="DarkOrange" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Grid.Style>
+                    <Grid Background="{DynamicResource RenderControlBackgroundBrush}"
+                          Height="120" Width="80">
                         <Grid Height="120" Width="80">
                             <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
                                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />

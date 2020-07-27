@@ -114,7 +114,6 @@ namespace Ruminoid.LIVE.Core
                 WorkerSupportsCancellation = true
             };
             _renderWorker.DoWork += DoRenderWork;
-            RenderState = WorkingState.Working;
             TriggerRender(0, true);
 
             _timer = new DispatcherTimer(
