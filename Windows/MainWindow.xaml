@@ -39,7 +39,7 @@
         <chrome:WindowChrome />
     </chrome:WindowChrome.Instance>
 
-    <StackPanel DataContext="{x:Static sync:Synchronizer.Current}">
+    <StackPanel>
         <Grid Name="WndCaption" Height="80">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -56,7 +56,8 @@
                                Margin="-16,0,0,8" Text="设置" />
                 </Grid>
             </ToggleButton>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                        DataContext="{x:Static sync:Synchronizer.Current}">
                 <ToggleButton Name="Wnd1" Width="80" Height="80"
                               IsChecked="{Binding Loaded, Mode=OneWay}"
                               Checked="LoadToggle_OnChecked"
@@ -105,6 +106,7 @@
             <Button Name="Wnd3" Grid.Column="2"
                     HorizontalAlignment="Right" VerticalAlignment="Top"
                     Width="80" Height="80"
+                    DataContext="{x:Static sync:Synchronizer.Current}"
                     IsEnabled="{Binding Loaded, Converter={StaticResource InverseBooleanConverter}}"
                     Command="Close">
                 <Grid Height="80" Width="80">
@@ -118,6 +120,7 @@
         <Grid Height="30">
             <Slider Margin="6"
                     Minimum="0" Maximum="1"
+                    DataContext="{x:Static sync:Synchronizer.Current}"
                     IsEnabled="{Binding Loaded}"
                     Value="{Binding Position.Percentage}"
                     IsMoveToPointEnabled="True" />
@@ -128,7 +131,7 @@
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}">
+                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -139,7 +142,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid Grid.Column="0">
-                    <StackPanel>
+                    <StackPanel DataContext="{x:Static sync:Synchronizer.Current}">
                         <Grid Margin="6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -183,7 +186,8 @@
                     </StackPanel>
                 </Grid>
                 <StackPanel Orientation="Horizontal"
-                            Grid.Column="1">
+                            Grid.Column="1"
+                            DataContext="{x:Static sync:Synchronizer.Current}">
                     <Grid Background="{DynamicResource BackgroundBrushKey}"
                           Height="120" Width="80">
                         <Grid Height="120" Width="80">
@@ -245,7 +249,7 @@
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}">
+                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}" Value="True">
                                 <Setter Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </Style.Triggers>
