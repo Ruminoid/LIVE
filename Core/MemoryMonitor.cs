@@ -65,10 +65,7 @@ namespace Ruminoid.LIVE.Core
             double mem = getMemory();
 
             if (mem > _memSize)
-            {
-                Purge?.Invoke(this, EventArgs.Empty);
                 WarningState = WorkingState.Failed;
-            }
             else if (mem > _memSize - 50)
                 WarningState = WorkingState.Working;
             else
@@ -78,8 +75,6 @@ namespace Ruminoid.LIVE.Core
         #endregion
 
         #region Event Trigger
-
-        public event EventHandler Purge;
 
         public event EventHandler<WorkingState> StateChanged;
 
