@@ -82,7 +82,7 @@ namespace Ruminoid.LIVE.Windows
 
             wndList = new List<FrameworkElement>
             {
-                Wnd1, Wnd2, Wnd3
+                Wnd1, Wnd2, Wnd3, SettingsToggle
             };
 
             #endregion
