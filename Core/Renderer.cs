@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Ruminoid.Common.Renderer.LibAss;
 using Ruminoid.Common.Utilities;
 using static Ruminoid.Common.Renderer.LibAss.LibASSInterop;
@@ -20,6 +21,7 @@ namespace Ruminoid.LIVE.Core
         private RendererCore _rendererCore;
         private Sender _sender;
         private MemoryMonitor _memoryMonitor;
+        private DispatcherTimer _timer;
 
         #endregion
 
@@ -113,6 +115,13 @@ namespace Ruminoid.LIVE.Core
             _renderWorker.DoWork += DoRenderWork;
             RenderState = WorkingState.Working;
             TriggerRender(0, true);
+
+            _timer = new DispatcherTimer(
+                TimeSpan.FromSeconds(2),
+                DispatcherPriority.Normal,
+                TimerTick,
+                Dispatcher.CurrentDispatcher);
+            _timer.Start();
         }
 
         #endregion
@@ -202,15 +211,18 @@ namespace Ruminoid.LIVE.Core
             {
                 RenderState = WorkingState.Failed;
                 TriggerRender(milliSec, true);
-                return;
             }
-            if (milliSec <= _renderIndex)
+        }
+
+        private void TimerTick(object sender, EventArgs e)
+        {
+            if (_playerIndex <= _renderIndex)
             {
-                if (_renderIndex - milliSec < _minRenderFrame)
+                if (_renderIndex - _playerIndex < _minRenderFrame)
                 {
-                    TriggerRender(milliSec, false);
+                    TriggerRender(_playerIndex, false);
                 }
-                else if (_renderIndex - milliSec < _maxRenderFrame)
+                else if (_renderIndex - _playerIndex < _maxRenderFrame)
                 {
                     RenderState = WorkingState.Working;
                 }
@@ -316,6 +328,9 @@ namespace Ruminoid.LIVE.Core
 
         public void Dispose()
         {
+            _timer.Stop();
+            _timer.Tick -= TimerTick;
+            _timer = null;
             _renderWorker.CancelAsync();
             _renderWorker.DoWork -= DoRenderWork;
             _renderWorker.Dispose();
