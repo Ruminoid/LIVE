@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Ruminoid.Common.Timing;
+using Ruminoid.Common.Utilities;
 using Unosquare.FFME.Common;
 
 namespace Ruminoid.LIVE.Core
@@ -108,6 +109,42 @@ namespace Ruminoid.LIVE.Core
             }
         }
 
+        private int _memSize;
+
+        public int MemSize
+        {
+            get => _memSize;
+            set
+            {
+                _memSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _minRenderFrame;
+
+        public int MinRenderFrame
+        {
+            get => _minRenderFrame;
+            set
+            {
+                _minRenderFrame = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _maxRenderFrame;
+
+        public int MaxRenderFrame
+        {
+            get => _maxRenderFrame;
+            set
+            {
+                _maxRenderFrame = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -133,14 +170,32 @@ namespace Ruminoid.LIVE.Core
         {
             Position.Total = (long) e.Info.Duration.TotalMilliseconds;
             int audioLength = (int) e.Info.Duration.TotalMilliseconds;
-            _renderer = new Renderer(Name, AssPath, Width, Height, audioLength);
+            _renderer = new Renderer(
+                Name,
+                AssPath,
+                Width,
+                Height,
+                audioLength,
+                MemSize,
+                MinRenderFrame,
+                MaxRenderFrame);
+            _renderer.StateChanged += RendererOnStateChanged;
             Loaded = true;
             InitializeCompleted?.Invoke(this, EventArgs.Empty);
         }
 
+        private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
+            StateChanged?.Invoke(this, e);
+
         public event EventHandler InitializeCompleted;
 
-        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) => Position.Time = (long)e.Position.TotalMilliseconds;
+        public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
+
+        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e)
+        {
+            Position.Time = (long) e.Position.TotalMilliseconds;
+            _renderer.Send((int) Position.Time);
+        }
 
         public void Release()
         {
@@ -158,6 +213,7 @@ namespace Ruminoid.LIVE.Core
             Position.Time = 0;
             Position.Total = 0;
             _player.Dispose();
+            _renderer.StateChanged -= RendererOnStateChanged;
             _renderer.Dispose();
         }
 
