@@ -269,7 +269,7 @@ namespace Ruminoid.LIVE.Core
 
         private void DoPurgeWork(object sender, DoWorkEventArgs e)
         {
-            while (!e.Cancel)
+            while (!_purgeWorker.CancellationPending)
             {
                 if (_purgeIndex >= _playerIndex && _purgeIndex < _playerIndex + _maxRenderFrame + 50)
                     _purgeIndex = _playerIndex + _maxRenderFrame + 50;
@@ -282,13 +282,15 @@ namespace Ruminoid.LIVE.Core
                 _renderedData[_purgeIndex] = IntPtr.Zero;
                 _purgeIndex++;
             }
+
+            e.Cancel = true;
         }
 
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
             int milliSec = (int)e.Argument;
             _renderIndex = milliSec;
-            while (!e.Cancel && _renderIndex < _total)
+            while (!_renderWorker.CancellationPending && _renderIndex < _total)
             {
                 if (_renderedData[_renderIndex] == IntPtr.Zero)
                 {
@@ -300,6 +302,8 @@ namespace Ruminoid.LIVE.Core
                 }
                 _renderIndex++;
             }
+
+            e.Cancel = true;
         }
 
         #endregion
