@@ -34,7 +34,8 @@ namespace Ruminoid.LIVE.Core
         public void Dispose()
         {
             MediaElement?.Close();
-            MediaElement?.Dispose();
+            //MediaElement?.Dispose();
+            MediaElement = null;
         }
     }
 }
