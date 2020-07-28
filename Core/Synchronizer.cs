@@ -197,7 +197,11 @@ namespace Ruminoid.LIVE.Core
                 MinRenderFrame,
                 MaxRenderFrame);
             _renderer.StateChanged += RendererOnStateChanged;
-            _timer = new Timer(1000 / (double) FPS);
+            _timer = new Timer(1000 / (double) FPS)
+            {
+                AutoReset = true,
+                Enabled = false
+            };
             _timer.Elapsed += TimerTick;
             Loaded = true;
             InitializeCompleted?.Invoke(this, EventArgs.Empty);

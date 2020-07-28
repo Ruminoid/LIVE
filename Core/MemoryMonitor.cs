@@ -49,12 +49,11 @@ namespace Ruminoid.LIVE.Core
 
             // Initialize Core
             _currentProcess = Process.GetCurrentProcess();
-            //_timer = new Timer(
-            //    TimerCallback,
-            //    null,
-            //    2000,
-            //    Timeout.Infinite);
-            _timer = new Timer(2000);
+            _timer = new Timer(2000)
+            {
+                AutoReset = true,
+                Enabled = false
+            };
             _timer.Elapsed += Tick;
             _timer.Start();
         }
