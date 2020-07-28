@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Ruminoid.Common.Renderer.LibAss;
 using Ruminoid.Common.Utilities;
-using static Ruminoid.Common.Renderer.LibAss.LibASSInterop;
 
 namespace Ruminoid.LIVE.Core
 {
@@ -20,7 +19,6 @@ namespace Ruminoid.LIVE.Core
         #region Core Data
 
         private RendererCore _rendererCore;
-        private Sender _sender;
         private MemoryMonitor _memoryMonitor;
         private DispatcherTimer _timer;
 
@@ -69,7 +67,6 @@ namespace Ruminoid.LIVE.Core
         #region Constructor
 
         public Renderer(
-            string name,
             string assPath,
             int width,
             int height,
@@ -98,7 +95,7 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor = new MemoryMonitor(memSize);
             _memoryMonitor.StateChanged += MemoryMonitorOnStateChanged;
             _rendererCore = new RendererCore(File.ReadAllText(assPath), width, height);
-            _sender = new Sender(name, (uint)width, (uint)height);
+            Sender.Current.Initialize((uint) _width, (uint) _height);
 
             // Initialize Worker
             _purgeWorker = new BackgroundWorker
@@ -205,7 +202,7 @@ namespace Ruminoid.LIVE.Core
         {
             IntPtr imageRaw = _renderedData[milliSec];
             if (imageRaw != IntPtr.Zero)
-                _sender.Send(Render(imageRaw));
+                Sender.Current.Send(Render(imageRaw));
             _playerIndex = milliSec;
             if (seek)
             {
@@ -361,7 +358,6 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
             _rendererCore?.Dispose();
-            _sender?.Dispose();
             for (int i = 0; i < _total; i++)
                 if (_renderedData[i] != IntPtr.Zero)
                     FreeImageData(_renderedData[i]);

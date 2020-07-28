@@ -25,18 +25,6 @@ namespace Ruminoid.LIVE.Core
 
         #region Synchro Data
 
-        private string _name = "";
-
-        public string Name
-        {
-            get => _name;
-            private set
-            {
-                _name = value;
-                OnPropertyChanged();
-            }
-        }
-
         private bool _loaded;
 
         public bool Loaded
@@ -161,7 +149,12 @@ namespace Ruminoid.LIVE.Core
 
         #endregion
 
-        #region Methods
+        #region Constructors
+
+        public Synchronizer()
+        {
+            Sender.Current.Initialize();
+        }
 
         public void Initialize()
         {
@@ -169,9 +162,6 @@ namespace Ruminoid.LIVE.Core
 
             // Start Initialize
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Working));
-
-            // Calculate Synchro Data
-            Name = $"{Path.GetFileNameWithoutExtension(_audioPath)} | {Process.GetCurrentProcess().Id}";
 
             // Initialize Core
             _player = new Player();
@@ -181,6 +171,10 @@ namespace Ruminoid.LIVE.Core
             _player.MediaElement.Open(new Uri(AudioPath));
         }
 
+        #endregion
+
+        #region Methods
+
         private void PositionOnOnPositionActiveChanged() => _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
 
         private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)
@@ -188,7 +182,6 @@ namespace Ruminoid.LIVE.Core
             Position.Total = (long) e.Info.Duration.TotalMilliseconds;
             int audioLength = (int) e.Info.Duration.TotalMilliseconds;
             _renderer = new Renderer(
-                Name,
                 AssPath,
                 Width,
                 Height,
@@ -233,7 +226,6 @@ namespace Ruminoid.LIVE.Core
             if (_timer.Enabled) _timer.Stop();
             _timer.Elapsed -= TimerTick;
             _timer.Dispose();
-            Name = "";
             Loaded = false;
             _player.MediaElement.MediaOpened -= PlayerOnMediaOpened;
             _player.MediaElement.PositionChanged -= PlayerOnPositionChanged;

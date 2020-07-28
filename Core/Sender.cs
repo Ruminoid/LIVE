@@ -10,15 +10,18 @@ namespace Ruminoid.LIVE.Core
 {
     public sealed class Sender : IDisposable
     {
-        #region Static
+        #region Current
 
-        private static DeviceContext _deviceContext;
-        private static IntPtr _glContext = IntPtr.Zero;
+        internal static Sender Current = new Sender();
 
-        static Sender()
-        {
-            
-        }
+        #endregion
+
+        private const string SenderName = "Ruminoid LIVE";
+
+        #region OpenGL
+
+        private DeviceContext _deviceContext;
+        private IntPtr _glContext = IntPtr.Zero;
 
         #endregion
 
@@ -30,29 +33,30 @@ namespace Ruminoid.LIVE.Core
 
         #region User Data
 
-        private uint _width, _height;
+        private uint _width = 1920, _height = 1080;
 
         #endregion
 
         #region Constructor
 
-        public Sender(string name, uint width, uint height)
+        public Sender()
         {
-            // Inject User Data
-            _width = width;
-            _height = height;
-
             // Initialize Static Core
-            if (_deviceContext is null)
-            {
-                _deviceContext = DeviceContext.Create();
-                _glContext = _deviceContext.CreateContext(IntPtr.Zero);
-                _deviceContext.MakeCurrent(_glContext);
-            }
+            _deviceContext = DeviceContext.Create();
+            _glContext = _deviceContext.CreateContext(IntPtr.Zero);
+            _deviceContext.MakeCurrent(_glContext);
 
             // Initialize Core
             _sender = new SpoutSender();
-            _sender.CreateSender(name, _width, _height, 0);
+            _sender.CreateSender(SenderName, _width, _height, 0);
+        }
+
+        public void Initialize(uint width = 1920, uint height = 1080)
+        {
+            _width = width;
+            _height = height;
+
+            _sender.UpdateSender(SenderName, _width, _height);
         }
 
         #endregion
