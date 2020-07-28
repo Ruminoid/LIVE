@@ -202,6 +202,11 @@ namespace Ruminoid.LIVE.Core
             _renderer.Send((int) Position.Time);
         }
 
+        public void JumpDuration(long duration)
+        {
+            Position.Time = (long) _player.JumpDuration(duration).TotalMilliseconds;
+        }
+
         public void Release()
         {
             if (!Loaded) return;

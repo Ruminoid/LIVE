@@ -31,11 +31,28 @@ namespace Ruminoid.LIVE.Core
 
         #endregion
 
+        #region Methods
+
+        public TimeSpan JumpDuration(long duration)
+        {
+            var target = MediaElement.Position + TimeSpan.FromMilliseconds(duration);
+            if (target.TotalMilliseconds < 0)
+                target = TimeSpan.Zero;
+            MediaElement.Seek(target).GetAwaiter().GetResult();
+            return target;
+        }
+
+        #endregion
+
+        #region Dispose
+
         public void Dispose()
         {
             MediaElement?.Close();
             //MediaElement?.Dispose();
             MediaElement = null;
         }
+
+        #endregion
     }
 }
