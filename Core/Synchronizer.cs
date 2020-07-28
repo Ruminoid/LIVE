@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Threading;
 using Ruminoid.Common.Timing;
 using Ruminoid.Common.Utilities;
@@ -50,12 +51,25 @@ namespace Ruminoid.LIVE.Core
 
         public Position Position { get; } = new Position();
 
+        private int _fps;
+
+        public int FPS
+        {
+            get => _fps;
+            set
+            {
+                _fps = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Core Data
 
         private Renderer _renderer;
         private Player _player;
+        private Timer _timer;
 
         #endregion
 
@@ -183,11 +197,15 @@ namespace Ruminoid.LIVE.Core
                 MinRenderFrame,
                 MaxRenderFrame);
             _renderer.StateChanged += RendererOnStateChanged;
+            _timer = new Timer(1000 / (double) FPS);
+            _timer.Elapsed += TimerTick;
             Loaded = true;
             InitializeCompleted?.Invoke(this, EventArgs.Empty);
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", WorkingState.Working));
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Completed));
         }
+
+        private void TimerTick(object sender, ElapsedEventArgs e) => _renderer.Send((int) Position.Time);
 
         private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
             StateChanged?.Invoke(this, e);
@@ -196,11 +214,8 @@ namespace Ruminoid.LIVE.Core
 
         public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
 
-        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e)
-        {
+        private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) =>
             Position.Time = (long) e.Position.TotalMilliseconds;
-            _renderer.Send((int) Position.Time);
-        }
 
         public void JumpDuration(long duration)
         {
@@ -211,6 +226,9 @@ namespace Ruminoid.LIVE.Core
         {
             if (!Loaded) return;
 
+            if (_timer.Enabled) _timer.Stop();
+            _timer.Elapsed -= TimerTick;
+            _timer.Dispose();
             Name = "";
             Loaded = false;
             _player.MediaElement.MediaOpened -= PlayerOnMediaOpened;
@@ -242,9 +260,15 @@ namespace Ruminoid.LIVE.Core
                 _playing = value;
                 OnPropertyChanged();
                 if (value)
+                {
+                    _timer.Start();
                     _player.MediaElement.Play();
+                }
                 else
+                {
+                    _timer.Stop();
                     _player.MediaElement.Pause();
+                }
             }
         }
 

@@ -149,7 +149,7 @@ namespace Ruminoid.LIVE.Windows
             ToggleButton toggle = sender as ToggleButton;
             if (toggle is null) return;
             string err = "";
-            int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0;
+            int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0, fps = 0;
             if (!int.TryParse(Config.Current.RenderWidth, out width) ||
                 !int.TryParse(Config.Current.RenderHeight, out height)) err = "渲染大小格式有误";
             if (err == "" && (width % 2 != 0 || height % 2 != 0 || width <= 0 || height <= 0))
@@ -160,6 +160,8 @@ namespace Ruminoid.LIVE.Windows
                 err = "渲染缓冲时间格式不正确";
             if (err == "" && memSize < 300) err = "预留内存过小";
             if (err == "" && minRenderFrame <= 0 || maxRenderFrame <= 0) err = "渲染缓冲时间过小";
+            if (!int.TryParse(Config.Current.FPS, out fps)) err = "帧率格式有误";
+            if (err == "" && fps < 1) err = "帧率过小";
             if (!File.Exists(Synchronizer.Current.AudioPath)) err = "音频文件路径有误";
             if (!File.Exists(Synchronizer.Current.AssPath)) err = "ASS字幕文件路径有误";
             if (err != "")
@@ -178,8 +180,9 @@ namespace Ruminoid.LIVE.Windows
             Synchronizer.Current.Width = width;
             Synchronizer.Current.Height = height;
             Synchronizer.Current.MemSize = memSize;
-            Synchronizer.Current.MinRenderFrame = minRenderFrame * 60;
-            Synchronizer.Current.MaxRenderFrame = maxRenderFrame * 60;
+            Synchronizer.Current.MinRenderFrame = minRenderFrame * fps;
+            Synchronizer.Current.MaxRenderFrame = maxRenderFrame * fps;
+            Synchronizer.Current.FPS = fps;
             Synchronizer.Current.Initialize();
         }
 

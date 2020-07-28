@@ -87,6 +87,19 @@ namespace Ruminoid.LIVE
             }
         }
 
+        [JsonProperty]
+        private string fps = "60";
+
+        public string FPS
+        {
+            get => fps;
+            set
+            {
+                fps = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region PropertyChanged

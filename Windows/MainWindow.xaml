@@ -1,4 +1,4 @@
-<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
+﻿<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -257,8 +257,6 @@
                     <StackPanel>
                         <TextBlock Margin="6" TextWrapping="Wrap"
                                    Text="请确保您清楚您在做什么。" />
-                        <TextBlock Margin="6" TextWrapping="Wrap"
-                                   Text="请确保预留了足够的缓存空间。" />
                         <Grid Margin="6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -266,6 +264,15 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="渲染内存（MB）: " />
                             <TextBox Text="{Binding MemSize, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80" Grid.Column="1" HorizontalAlignment="Left" />
+                        </Grid>
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="帧率: " />
+                            <TextBox Text="{Binding FPS, UpdateSourceTrigger=PropertyChanged}"
                                      Width="80" Grid.Column="1" HorizontalAlignment="Left" />
                         </Grid>
                     </StackPanel>
