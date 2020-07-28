@@ -226,7 +226,7 @@
                                        Margin="-2,0,0,6" Text="渲染" />
                         </Grid>
                     </Grid>
-                    <Grid Background="{DynamicResource RenderControlBackgroundBrush}"
+                    <Grid Background="{DynamicResource SenderControlBackgroundBrush}"
                           Height="120" Width="80">
                         <Grid Height="120" Width="80">
                             <visualIcon:Icon Type="SendtoBack" Width="35" Height="35" Size="2"
