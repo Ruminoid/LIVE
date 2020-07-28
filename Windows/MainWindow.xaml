@@ -1,4 +1,4 @@
-﻿<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
+<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -22,7 +22,8 @@
                       Title="LIVE"
                       WindowStartupLocation="CenterScreen"
                       Name="RootElement"
-                      PreviewKeyDown="MainWindow_OnPreviewKeyDown">
+                      PreviewKeyDown="MainWindow_OnPreviewKeyDown"
+                      Icon="/Ruminoid.LIVE;component/Assets/Ruminoid.LIVE.Colored.Transparent.ico">
 
     <controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="MemoryControlBackgroundBrush"
