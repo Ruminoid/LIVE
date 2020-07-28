@@ -22,8 +22,7 @@
                       Title="LIVE"
                       WindowStartupLocation="CenterScreen"
                       Name="RootElement"
-                      PreviewKeyDown="MainWindow_OnPreviewKeyDown"
-                      PreviewKeyUp="MainWindow_OnPreviewKeyUp">
+                      PreviewKeyDown="MainWindow_OnPreviewKeyDown">
 
     <controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="MemoryControlBackgroundBrush"
