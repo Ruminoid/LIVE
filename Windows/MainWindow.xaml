@@ -101,7 +101,7 @@
                         <visualIcon:Icon Type="Run" Width="35" Height="35" Size="2"
                                          HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-2,-4,0,0" />
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                   Margin="-16,0,0,8" Text="回放 (Space)" />
+                                   Margin="-16,0,0,8" Text="回放 (空格)" />
                     </Grid>
                 </ToggleButton>
             </StackPanel>
