@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -114,7 +114,7 @@ namespace Ruminoid.LIVE.Core
             TriggerRender(0, true);
 
             _timer = new DispatcherTimer(
-                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(1),
                 DispatcherPriority.Normal,
                 TimerTick,
                 Dispatcher.CurrentDispatcher);
