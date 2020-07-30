@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Ruminoid.Common.Renderer.LibAss;
+using Ruminoid.Common.Renderer.Utilities;
 using Ruminoid.Common.Utilities;
 
 namespace Ruminoid.LIVE.Core
@@ -21,6 +22,7 @@ namespace Ruminoid.LIVE.Core
         private RendererCore _rendererCore;
         private MemoryMonitor _memoryMonitor;
         private DispatcherTimer _timer;
+        private FrameAdaptor _frameAdaptor;
 
         #endregion
 
@@ -43,7 +45,6 @@ namespace Ruminoid.LIVE.Core
 
         private int _width;
         private int _height;
-        private int _total;
         private int _minRenderFrame;
         private int _maxRenderFrame;
 
@@ -75,18 +76,19 @@ namespace Ruminoid.LIVE.Core
             int total,
             int memSize,
             int minRenderFrame,
-            int maxRenderFrame)
+            int maxRenderFrame,
+            int frameRate)
         {
             // Initialize User Data
             _width = width;
             _height = height;
-            _total = total;
             _minRenderFrame = minRenderFrame;
             _maxRenderFrame = maxRenderFrame;
 
             // Initialize Core Data
-            _renderedData = new IntPtr[total];
-            for (int i = 0; i < total; i++) _renderedData[i] = IntPtr.Zero;
+            _frameAdaptor = new FrameAdaptor(frameRate, total);
+            _renderedData = new IntPtr[_frameAdaptor.TotalFrame];
+            for (int i = 0; i < _frameAdaptor.TotalFrame; i++) _renderedData[i] = IntPtr.Zero;
 
             // Initialize Worker Data
             _purgeIndex = 0;
@@ -204,14 +206,15 @@ namespace Ruminoid.LIVE.Core
 
         public void Send(int milliSec, bool seek = false)
         {
-            IntPtr imageRaw = _renderedData[milliSec];
+            int frameIndex = _frameAdaptor.GetFrameIndex(milliSec);
+            IntPtr imageRaw = _renderedData[frameIndex];
             if (imageRaw != IntPtr.Zero)
                 Sender.Current.Send(Render(imageRaw));
-            _playerIndex = milliSec;
+            _playerIndex = frameIndex;
             if (seek)
             {
                 RenderState = WorkingState.Failed;
-                TriggerRender(milliSec, true);
+                TriggerRender(frameIndex, true);
             }
         }
 
@@ -254,7 +257,7 @@ namespace Ruminoid.LIVE.Core
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
         }
 
-        private void TriggerRender(int milliSec, bool restart)
+        private void TriggerRender(int frameIndex, bool restart)
         {
             if (restart)
             {
@@ -264,7 +267,7 @@ namespace Ruminoid.LIVE.Core
                     // Ignore
                 }
             }
-            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync(milliSec);
+            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync(frameIndex);
         }
 
         #endregion
@@ -275,9 +278,9 @@ namespace Ruminoid.LIVE.Core
         {
             while (!_purgeWorker.CancellationPending)
             {
-                if (_purgeIndex >= _playerIndex && _purgeIndex < _playerIndex + _maxRenderFrame + 50)
-                    _purgeIndex = _playerIndex + _maxRenderFrame + 50;
-                if (_purgeIndex >= _total)
+                if (_purgeIndex >= _playerIndex && _purgeIndex < _playerIndex + _maxRenderFrame + 10)
+                    _purgeIndex = _playerIndex + _maxRenderFrame + 10;
+                if (_purgeIndex >= _frameAdaptor.TotalFrame)
                 {
                     Thread.Sleep(5000);
                     _purgeIndex = 0;
@@ -292,16 +295,15 @@ namespace Ruminoid.LIVE.Core
 
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
-            int milliSec = (int)e.Argument;
-            lock (_renderLocker) _renderIndex = milliSec;
+            lock (_renderLocker) _renderIndex = (int) e.Argument; // frameIndex
 
-            while (!_renderWorker.CancellationPending && _renderIndex < _total)
+            while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
             {
                 lock (_renderLocker)
                 {
                     if (_renderedData[_renderIndex] == IntPtr.Zero)
                     {
-                        IntPtr data = _rendererCore.PreRender(_renderIndex);
+                        IntPtr data = _rendererCore.PreRender(_frameAdaptor.GetMilliSec(_renderIndex));
                         lock (_renderedData)
                         {
                             _renderedData[_renderIndex] = data;
@@ -366,10 +368,11 @@ namespace Ruminoid.LIVE.Core
             _purgeWorker.CancelAsync();
             _purgeWorker.DoWork -= DoPurgeWork;
             _purgeWorker.Dispose();
+            _renderLocker = null;
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
             _rendererCore?.Dispose();
-            for (int i = 0; i < _total; i++)
+            for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (_renderedData[i] != IntPtr.Zero)
                     FreeImageData(_renderedData[i]);
         }

@@ -192,7 +192,8 @@ namespace Ruminoid.LIVE.Core
                 audioLength,
                 MemSize,
                 MinRenderFrame,
-                MaxRenderFrame);
+                MaxRenderFrame,
+                FPS);
             _renderer.StateChanged += RendererOnStateChanged;
             _timer = new Timer(1000 / (double) FPS)
             {
