@@ -57,7 +57,6 @@
     <Compile Include="Core\MemoryMonitor.cs" />
     <Compile Include="Core\Player.cs" />
     <Compile Include="Core\Renderer.cs" />
-    <Compile Include="Core\RendererCore.cs" />
     <Compile Include="Core\Sender.cs" />
     <Compile Include="Core\Synchronizer.cs" />
     <Compile Include="Windows\MainWindow.xaml.cs">
