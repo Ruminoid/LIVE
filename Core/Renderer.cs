@@ -35,6 +35,8 @@ namespace Ruminoid.LIVE.Core
         private int _renderIndex;
         private int _playerIndex;
 
+        private object _renderLocker;
+
         #endregion
 
         #region User Data
@@ -90,6 +92,8 @@ namespace Ruminoid.LIVE.Core
             _purgeIndex = 0;
             _renderIndex = 0;
             _playerIndex = 0;
+
+            _renderLocker = new object();
 
             // Initialize Core
             _memoryMonitor = new MemoryMonitor(memSize);
@@ -213,25 +217,28 @@ namespace Ruminoid.LIVE.Core
 
         private void TimerTick(object sender, EventArgs e)
         {
-            if (_playerIndex <= _renderIndex)
+            lock (_renderLocker)
             {
-                if (_renderIndex - _playerIndex < _minRenderFrame)
+                if (_playerIndex <= _renderIndex)
                 {
-                    TriggerRender(_playerIndex, false);
-                }
-                else if (_renderIndex - _playerIndex < _maxRenderFrame)
-                {
-                    RenderState = WorkingState.Working;
+                    if (_renderIndex - _playerIndex < _minRenderFrame)
+                    {
+                        TriggerRender(_playerIndex, false);
+                    }
+                    else if (_renderIndex - _playerIndex < _maxRenderFrame)
+                    {
+                        RenderState = WorkingState.Working;
+                    }
+                    else
+                    {
+                        _renderWorker.CancelAsync();
+                        RenderState = WorkingState.Completed;
+                    }
                 }
                 else
                 {
-                    _renderWorker.CancelAsync();
-                    RenderState = WorkingState.Completed;
+                    RenderState = WorkingState.Failed;
                 }
-            }
-            else
-            {
-                RenderState = WorkingState.Failed;
             }
         }
 
@@ -286,18 +293,22 @@ namespace Ruminoid.LIVE.Core
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
             int milliSec = (int)e.Argument;
-            _renderIndex = milliSec;
+            lock (_renderLocker) _renderIndex = milliSec;
+
             while (!_renderWorker.CancellationPending && _renderIndex < _total)
             {
-                if (_renderedData[_renderIndex] == IntPtr.Zero)
+                lock (_renderLocker)
                 {
-                    IntPtr data = _rendererCore.PreRender(_renderIndex);
-                    lock (_renderedData)
+                    if (_renderedData[_renderIndex] == IntPtr.Zero)
                     {
-                        _renderedData[_renderIndex] = data;
+                        IntPtr data = _rendererCore.PreRender(_renderIndex);
+                        lock (_renderedData)
+                        {
+                            _renderedData[_renderIndex] = data;
+                        }
                     }
+                    _renderIndex++;
                 }
-                _renderIndex++;
             }
 
             e.Cancel = true;
