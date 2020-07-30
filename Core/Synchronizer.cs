@@ -175,7 +175,11 @@ namespace Ruminoid.LIVE.Core
 
         #region Methods
 
-        private void PositionOnOnPositionActiveChanged() => _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
+        private void PositionOnOnPositionActiveChanged()
+        {
+            _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
+            _renderer.Send((int) Position.Time, true);
+        }
 
         private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)
         {
