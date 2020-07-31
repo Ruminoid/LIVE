@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -116,11 +116,13 @@ namespace Ruminoid.LIVE.Core
             _renderTargetIndexes = new int[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
-                _renderResetEvents[i] = new AutoResetEvent(true);
-                _renderManagerResetEvents[i] = new AutoResetEvent(false);
-                _renderThreads[i] = new Thread(RenderInThread);
+                _renderResetEvents[i] = new AutoResetEvent(false);
+                _renderManagerResetEvents[i] = new AutoResetEvent(true);
+                _renderThreads[i] = new Thread(RenderInThread)
+                {
+                    IsBackground = true
+                };
                 _renderThreads[i].Start(i);
-                _renderTargetIndexes[i] = 0;
             }
 
             // Initialize Worker
