@@ -117,7 +117,9 @@ namespace Ruminoid.LIVE.Core
             for (int i = 0; i < threadCount; i++)
             {
                 _renderResetEvents[i] = new AutoResetEvent(false);
-                _renderManagerResetEvents[i] = new AutoResetEvent(true);
+                _renderResetEvents[i].Reset();
+                _renderManagerResetEvents[i] = new AutoResetEvent(false);
+                _renderManagerResetEvents[i].Set();
                 _renderThreads[i] = new Thread(RenderInThread)
                 {
                     IsBackground = true
