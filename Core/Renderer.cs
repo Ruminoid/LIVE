@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Ruminoid.Common.Renderer.Core;
-using Ruminoid.Common.Renderer.LibAss;
 using Ruminoid.Common.Renderer.Utilities;
 using Ruminoid.Common.Utilities;
 
@@ -20,7 +19,7 @@ namespace Ruminoid.LIVE.Core
     {
         #region Core Data
 
-        private AssRenderCore[] _rendererCores;
+        private AssRenderCore _rendererCore;
         private MemoryMonitor _memoryMonitor;
         private DispatcherTimer _timer;
         private FrameAdaptor _frameAdaptor;
@@ -33,6 +32,11 @@ namespace Ruminoid.LIVE.Core
 
         private BackgroundWorker _purgeWorker;
         private BackgroundWorker _renderWorker;
+
+        private Thread[] _renderThreads;
+        private AutoResetEvent[] _renderResetEvents;
+        private AutoResetEvent[] _renderManagerResetEvents;
+        private int[] _renderTargetIndexs;
 
         private int _purgeIndex;
         private int _renderIndex;
@@ -78,7 +82,9 @@ namespace Ruminoid.LIVE.Core
             int minRenderFrame,
             int maxRenderFrame,
             int frameRate,
-            int threadCount)
+            int threadCount,
+            int glyphMax,
+            int bitmapMax)
         {
             // Initialize User Data
             _minRenderFrame = minRenderFrame;
@@ -100,9 +106,21 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor = new MemoryMonitor(memSize);
             _memoryMonitor.StateChanged += MemoryMonitorOnStateChanged;
             string subData = File.ReadAllText(assPath);
-            _rendererCores = new AssRenderCore[threadCount];
-            for (int i = 0; i < threadCount; i++) _rendererCores[i] = new AssRenderCore(ref subData, width, height);
+            _rendererCore = new AssRenderCore(ref subData, width, height, threadCount, glyphMax, bitmapMax);
             Sender.Current.Initialize((uint) width, (uint) height);
+
+            // Initialize Render Threads
+            _renderThreads = new Thread[threadCount];
+            _renderResetEvents = new AutoResetEvent[threadCount];
+            _renderTargetIndexs = new int[threadCount];
+            for (int i = 0; i < threadCount; i++)
+            {
+                _renderThreads[i] = new Thread(RenderInThread);
+                _renderThreads[i].Start(i);
+                _renderResetEvents[i] = new AutoResetEvent(false);
+                _renderManagerResetEvents[i] = new AutoResetEvent(true);
+                _renderTargetIndexs[i] = 0;
+            }
 
             // Initialize Worker
             _purgeWorker = new BackgroundWorker
@@ -213,15 +231,17 @@ namespace Ruminoid.LIVE.Core
                     Thread.Sleep(5000);
                     _purgeIndex = 0;
                 }
-                _renderedData[_purgeIndex].Dispose();
-                _renderedData[_purgeIndex] = null;
+
+                lock (_renderedData)
+                {
+                    _renderedData[_purgeIndex].Dispose();
+                    _renderedData[_purgeIndex] = null;
+                }
                 _purgeIndex++;
             }
 
             e.Cancel = true;
         }
-
-        private const int RenderStep = 4;
 
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
@@ -231,28 +251,30 @@ namespace Ruminoid.LIVE.Core
             {
                 lock (_renderLocker)
                 {
-                    Task[] tasks = new Task[_threadCount];
-                    for (int i = 0; i < _threadCount; i++)
+                    for (int threadIndex = 0; threadIndex < _threadCount; threadIndex++)
                     {
-                        int s = i * RenderStep;
-                        tasks[i] = Task.Factory.StartNew(() =>
-                        {
-                            for (int r = s; r < s + RenderStep; r++)
-                            {
-                                if (_renderIndex + r >= _frameAdaptor.TotalFrame ||
-                                    !(_renderedData[_renderIndex + r] is null)) return;
-                                RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
-                                lock (_renderedData) _renderedData[_renderIndex + r] = data;
-                            }
-                        });
+                        _renderManagerResetEvents[threadIndex].WaitOne();
+                        int targetIndex = _renderIndex + threadIndex;
+                        if (targetIndex >= _frameAdaptor.TotalFrame ||
+                            !(_renderedData[targetIndex] is null)) return;
+                        lock (_renderTargetIndexs) _renderTargetIndexs[threadIndex] = targetIndex;
+                        _renderResetEvents[threadIndex].Set();
                     }
-
-                    Task.WaitAll(tasks);
-                    _renderIndex += _threadCount * RenderStep;
+                    _renderIndex += _threadCount;
                 }
             }
 
             e.Cancel = true;
+        }
+
+        private void RenderInThread(object obj)
+        {
+            int threadIndex = (int)obj;
+            _renderResetEvents[threadIndex].WaitOne();
+            int targetIndex = _renderTargetIndexs[threadIndex];
+            RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
+            lock (_renderedData) _renderedData[targetIndex] = data;
+            _renderManagerResetEvents[threadIndex].Set();
         }
 
         #endregion
@@ -287,13 +309,19 @@ namespace Ruminoid.LIVE.Core
             _renderWorker.CancelAsync();
             _renderWorker.DoWork -= DoRenderWork;
             _renderWorker.Dispose();
+            for (int i = 0; i < _threadCount; i++)
+            {
+                _renderThreads[i].Abort();
+                _renderResetEvents[i].Dispose();
+                _renderManagerResetEvents[i].Dispose();
+            }
             _purgeWorker.CancelAsync();
             _purgeWorker.DoWork -= DoPurgeWork;
             _purgeWorker.Dispose();
             _renderLocker = null;
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
-            for (int i = 0; i < _threadCount; i++) _rendererCores[i].Dispose();
+            _rendererCore.Dispose();
             for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (!(_renderedData[i] is null))
                     _renderedData[i].Dispose();
