@@ -36,7 +36,7 @@ namespace Ruminoid.LIVE.Core
         private Thread[] _renderThreads;
         private AutoResetEvent[] _renderResetEvents;
         private AutoResetEvent[] _renderManagerResetEvents;
-        private int[] _renderTargetIndexs;
+        private int[] _renderTargetIndexes;
 
         private int _purgeIndex;
         private int _renderIndex;
@@ -112,14 +112,15 @@ namespace Ruminoid.LIVE.Core
             // Initialize Render Threads
             _renderThreads = new Thread[threadCount];
             _renderResetEvents = new AutoResetEvent[threadCount];
-            _renderTargetIndexs = new int[threadCount];
+            _renderManagerResetEvents = new AutoResetEvent[threadCount];
+            _renderTargetIndexes = new int[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
                 _renderThreads[i] = new Thread(RenderInThread);
                 _renderThreads[i].Start(i);
                 _renderResetEvents[i] = new AutoResetEvent(false);
                 _renderManagerResetEvents[i] = new AutoResetEvent(true);
-                _renderTargetIndexs[i] = 0;
+                _renderTargetIndexes[i] = 0;
             }
 
             // Initialize Worker
@@ -257,7 +258,7 @@ namespace Ruminoid.LIVE.Core
                         int targetIndex = _renderIndex + threadIndex;
                         if (targetIndex >= _frameAdaptor.TotalFrame ||
                             !(_renderedData[targetIndex] is null)) return;
-                        lock (_renderTargetIndexs) _renderTargetIndexs[threadIndex] = targetIndex;
+                        lock (_renderTargetIndexes) _renderTargetIndexes[threadIndex] = targetIndex;
                         _renderResetEvents[threadIndex].Set();
                     }
                     _renderIndex += _threadCount;
@@ -271,7 +272,7 @@ namespace Ruminoid.LIVE.Core
         {
             int threadIndex = (int)obj;
             _renderResetEvents[threadIndex].WaitOne();
-            int targetIndex = _renderTargetIndexs[threadIndex];
+            int targetIndex = _renderTargetIndexes[threadIndex];
             RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
             lock (_renderedData) _renderedData[targetIndex] = data;
             _renderManagerResetEvents[threadIndex].Set();
