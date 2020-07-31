@@ -240,5 +240,10 @@ namespace Ruminoid.LIVE.Windows
             Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Libraries/OBS_Spout_Installer.exe"));
 
         #endregion
+
+        private void CollapseStoryBoard_OnCompleted(object sender, EventArgs e)
+        {
+            Height = 230;
+        }
     }
 }

@@ -1,4 +1,4 @@
-<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
+﻿<controls:MetroWindow x:Class="Ruminoid.LIVE.Windows.MainWindow"
                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -51,6 +51,72 @@
             <ToggleButton Name="SettingsToggle" Grid.Column="0"
                           HorizontalAlignment="Left" VerticalAlignment="Top"
                           Width="80" Height="80">
+                <ToggleButton.Triggers>
+                    <EventTrigger RoutedEvent="ToggleButton.Checked">
+                        <EventTrigger.Actions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="FilePanel"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="120" To="0"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="SettingsPanel"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="0" To="300"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="RootElement"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="230" To="410"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger.Actions>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="ToggleButton.Unchecked">
+                        <EventTrigger.Actions>
+                            <BeginStoryboard>
+                                <Storyboard Completed="CollapseStoryBoard_OnCompleted">
+                                    <DoubleAnimation Storyboard.TargetName="FilePanel"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="0" To="120"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="SettingsPanel"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="300" To="0"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="RootElement"
+                                                     Storyboard.TargetProperty="Height"
+                                                     From="410" To="230"
+                                                     Duration="00:00:00.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger.Actions>
+                    </EventTrigger>
+                </ToggleButton.Triggers>
                 <Grid Height="80" Width="80">
                     <visualIcon:Icon Type="Settings" Width="35" Height="35" Size="2"
                                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-2,-4,0,0" />
@@ -127,18 +193,8 @@
                     Value="{Binding Position.Percentage}"
                     IsMoveToPointEnabled="True" />
         </Grid>
-        <StackPanel Height="120">
-            <Grid Height="120">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Visible" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
+        <StackPanel VerticalAlignment="Top">
+            <Grid Name="FilePanel" Height="120">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition Width="Auto" />
@@ -237,17 +293,7 @@
                     </Grid>
                 </StackPanel>
             </Grid>
-            <Grid Height="120">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
+            <Grid Name="SettingsPanel" Height="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
