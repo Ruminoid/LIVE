@@ -116,10 +116,10 @@ namespace Ruminoid.LIVE.Core
             _renderTargetIndexes = new int[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
+                _renderResetEvents[i] = new AutoResetEvent(true);
+                _renderManagerResetEvents[i] = new AutoResetEvent(false);
                 _renderThreads[i] = new Thread(RenderInThread);
                 _renderThreads[i].Start(i);
-                _renderResetEvents[i] = new AutoResetEvent(false);
-                _renderManagerResetEvents[i] = new AutoResetEvent(true);
                 _renderTargetIndexes[i] = 0;
             }
 
