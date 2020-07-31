@@ -152,7 +152,7 @@
       <Version>0.8.4</Version>
     </PackageReference>
     <PackageReference Include="Ruminoid.Libraries">
-      <Version>0.2.8</Version>
+      <Version>0.2.9</Version>
     </PackageReference>
     <PackageReference Include="WindowsAPICodePack-Shell">
       <Version>1.1.1</Version>
