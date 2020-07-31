@@ -13,9 +13,7 @@ namespace Ruminoid.LIVE.Core
     {
         #region Core
 
-        private Process _currentProcess;
-
-        private double getMemory() => _currentProcess.WorkingSet64 / 1024.0 / 1024.0;
+        private double getMemory() => Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0;
 
         private Timer _timer;
 
@@ -48,7 +46,6 @@ namespace Ruminoid.LIVE.Core
             WarningState = WorkingState.Completed;
 
             // Initialize Core
-            _currentProcess = Process.GetCurrentProcess();
             _timer = new Timer(2000)
             {
                 AutoReset = true,
@@ -86,7 +83,6 @@ namespace Ruminoid.LIVE.Core
 
         public void Dispose()
         {
-            _currentProcess?.Dispose();
             _timer.Stop();
             _timer.Elapsed -= Tick;
             _timer?.Dispose();
