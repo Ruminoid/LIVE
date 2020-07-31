@@ -229,19 +229,20 @@ namespace Ruminoid.LIVE.Core
             {
                 lock (_renderLocker)
                 {
+                    Task[] tasks = new Task[_threadCount];
                     for (int i = 0; i < _threadCount; i++)
-                        ThreadPool.QueueUserWorkItem(state =>
+                    {
+                        int r = i;
+                        tasks[i] = Task.Factory.StartNew(() =>
                         {
-                            int r = (int) state;
-                            if (_renderedData[_renderIndex + r] is null)
-                            {
-                                RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
-                                lock (_renderedData)
-                                {
-                                    _renderedData[_renderIndex + r] = data;
-                                }
-                            }
-                        }, i);
+                            if (_renderIndex + r >= _frameAdaptor.TotalFrame ||
+                                !(_renderedData[_renderIndex + r] is null)) return;
+                            RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
+                            lock (_renderedData) _renderedData[_renderIndex + r] = data;
+                        });
+                    }
+
+                    Task.WaitAll(tasks);
                     _renderIndex += _threadCount;
                 }
             }
