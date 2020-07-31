@@ -323,7 +323,7 @@
                                      Width="80" Grid.Column="1" HorizontalAlignment="Left" />
                         </Grid>
                         <TextBlock Margin="6" TextWrapping="Wrap"
-                                   Text="渲染线程数不建议超过处理器核心数。" />
+                                   Text="渲染线程数应小于处理器核心数。" />
                         <Grid Margin="6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
