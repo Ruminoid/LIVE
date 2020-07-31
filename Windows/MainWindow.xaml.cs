@@ -154,7 +154,15 @@ namespace Ruminoid.LIVE.Windows
 
             try
             {
-                int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0, frameRate = 0, threadCount = 0;
+                int width = 0,
+                    height = 0,
+                    minRenderFrame = 0,
+                    maxRenderFrame = 0,
+                    memSize = 0,
+                    frameRate = 0,
+                    threadCount = 0,
+                    glyphMax = 0,
+                    bitmapMax = 0;
                 if (!int.TryParse(Config.Current.RenderWidth, out width) ||
                     !int.TryParse(Config.Current.RenderHeight, out height)) throw new Exception("渲染大小格式有误");
                 if ((width % 2 != 0 || height % 2 != 0 || width <= 0 || height <= 0))
@@ -169,6 +177,10 @@ namespace Ruminoid.LIVE.Windows
                 if (frameRate < 1) throw new Exception("帧率过小");
                 if (!int.TryParse(Config.Current.ThreadCount, out threadCount)) throw new Exception("线程数格式有误");
                 if (threadCount < 1) throw new Exception("线程数过小");
+                if (!int.TryParse(Config.Current.GlyphMax, out glyphMax)) throw new Exception("形状缓存格式有误");
+                if (glyphMax < 1) throw new Exception("形状缓存数过小");
+                if (!int.TryParse(Config.Current.BitmapMax, out bitmapMax)) throw new Exception("位图缓存格式有误");
+                if (bitmapMax < 1) throw new Exception("位图缓存过小");
                 if (!File.Exists(Synchronizer.Current.AudioPath)) throw new Exception("音频文件路径有误");
                 if (!File.Exists(Synchronizer.Current.AssPath)) throw new Exception("ASS字幕文件路径有误");
 
@@ -181,6 +193,8 @@ namespace Ruminoid.LIVE.Windows
                 Synchronizer.Current.MaxRenderFrame = maxRenderFrame * frameRate;
                 Synchronizer.Current.FrameRate = frameRate;
                 Synchronizer.Current.ThreadCount = threadCount;
+                Synchronizer.Current.GlyphMax = glyphMax;
+                Synchronizer.Current.BitmapMax = bitmapMax;
                 Synchronizer.Current.Initialize();
             }
             catch (Exception exception)

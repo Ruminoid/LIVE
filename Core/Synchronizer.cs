@@ -159,6 +159,30 @@ namespace Ruminoid.LIVE.Core
             }
         }
 
+        private int _glyphMax;
+
+        public int GlyphMax
+        {
+            get => _glyphMax;
+            set
+            {
+                _glyphMax = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _bitmapMax;
+
+        public int BitmapMax
+        {
+            get => _bitmapMax;
+            set
+            {
+                _bitmapMax = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Constructors
@@ -206,7 +230,9 @@ namespace Ruminoid.LIVE.Core
                 MinRenderFrame,
                 MaxRenderFrame,
                 FrameRate,
-                ThreadCount);
+                ThreadCount,
+                GlyphMax,
+                BitmapMax);
             _renderer.StateChanged += RendererOnStateChanged;
             _timer = new Timer(1000 / (double) FrameRate)
             {

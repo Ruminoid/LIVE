@@ -113,6 +113,32 @@ namespace Ruminoid.LIVE
             }
         }
 
+        [JsonProperty]
+        private string glyphMax = "1024";
+
+        public string GlyphMax
+        {
+            get => glyphMax;
+            set
+            {
+                glyphMax = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        private string bitmapMax = "64";
+
+        public string BitmapMax
+        {
+            get => bitmapMax;
+            set
+            {
+                bitmapMax = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region PropertyChanged

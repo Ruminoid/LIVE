@@ -333,9 +333,24 @@
                             <TextBox Text="{Binding ThreadCount, UpdateSourceTrigger=PropertyChanged}"
                                      Width="80" Grid.Column="1" HorizontalAlignment="Left" />
                         </Grid>
-                        <Button Margin="6" Content="安装 OBS Spout 插件"
-                                HorizontalAlignment="Left" Padding="12"
-                                Click="SpoutInstallButtonBase_OnClick" />
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="形状缓存: " />
+                            <TextBox Text="{Binding GlyphMax, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80" Grid.Column="1" HorizontalAlignment="Left" />
+                        </Grid>
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="位图缓存（MB）: " />
+                            <TextBox Text="{Binding BitmapMax, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80" Grid.Column="1" HorizontalAlignment="Left" />
+                        </Grid>
                     </StackPanel>
                 </Grid>
                 <Grid Grid.Column="1"
