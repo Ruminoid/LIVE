@@ -147,6 +147,18 @@ namespace Ruminoid.LIVE.Core
             }
         }
 
+        private int _threadCount;
+
+        public int ThreadCount
+        {
+            get => _threadCount;
+            set
+            {
+                _threadCount = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Constructors
@@ -193,7 +205,8 @@ namespace Ruminoid.LIVE.Core
                 MemSize,
                 MinRenderFrame,
                 MaxRenderFrame,
-                FrameRate);
+                FrameRate,
+                ThreadCount);
             _renderer.StateChanged += RendererOnStateChanged;
             _timer = new Timer(1000 / (double) FrameRate)
             {

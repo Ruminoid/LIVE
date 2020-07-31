@@ -20,7 +20,7 @@ namespace Ruminoid.LIVE.Core
     {
         #region Core Data
 
-        private AssRenderCore _rendererCore;
+        private AssRenderCore[] _rendererCores;
         private MemoryMonitor _memoryMonitor;
         private DispatcherTimer _timer;
         private FrameAdaptor _frameAdaptor;
@@ -44,10 +44,9 @@ namespace Ruminoid.LIVE.Core
 
         #region User Data
 
-        private int _width;
-        private int _height;
         private int _minRenderFrame;
         private int _maxRenderFrame;
+        private int _threadCount;
 
         #endregion
 
@@ -78,13 +77,13 @@ namespace Ruminoid.LIVE.Core
             int memSize,
             int minRenderFrame,
             int maxRenderFrame,
-            int frameRate)
+            int frameRate,
+            int threadCount)
         {
             // Initialize User Data
-            _width = width;
-            _height = height;
             _minRenderFrame = minRenderFrame;
             _maxRenderFrame = maxRenderFrame;
+            _threadCount = threadCount;
 
             // Initialize Core Data
             _frameAdaptor = new FrameAdaptor(frameRate, total);
@@ -100,8 +99,10 @@ namespace Ruminoid.LIVE.Core
             // Initialize Core
             _memoryMonitor = new MemoryMonitor(memSize);
             _memoryMonitor.StateChanged += MemoryMonitorOnStateChanged;
-            _rendererCore = new AssRenderCore(File.ReadAllText(assPath), width, height);
-            Sender.Current.Initialize((uint) _width, (uint) _height);
+            string subData = File.ReadAllText(assPath);
+            _rendererCores = new AssRenderCore[threadCount];
+            for (int i = 0; i < threadCount; i++) _rendererCores[i] = new AssRenderCore(ref subData, width, height);
+            Sender.Current.Initialize((uint) width, (uint) height);
 
             // Initialize Worker
             _purgeWorker = new BackgroundWorker
@@ -228,20 +229,20 @@ namespace Ruminoid.LIVE.Core
             {
                 lock (_renderLocker)
                 {
-                    for (int i = _renderIndex; i < _renderIndex + 4; i++)
+                    for (int i = 0; i < _threadCount; i++)
                         ThreadPool.QueueUserWorkItem(state =>
                         {
                             int r = (int) state;
-                            if (_renderedData[r] is null)
+                            if (_renderedData[_renderIndex + r] is null)
                             {
-                                RuminoidImageT data = _rendererCore.Render(_frameAdaptor.GetMilliSec(_renderIndex));
+                                RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
                                 lock (_renderedData)
                                 {
-                                    _renderedData[r] = data;
+                                    _renderedData[_renderIndex + r] = data;
                                 }
                             }
                         }, i);
-                    _renderIndex += 4;
+                    _renderIndex += _threadCount;
                 }
             }
 
@@ -286,7 +287,7 @@ namespace Ruminoid.LIVE.Core
             _renderLocker = null;
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
-            _rendererCore?.Dispose();
+            for (int i = 0; i < _threadCount; i++) _rendererCores[i].Dispose();
             for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (!(_renderedData[i] is null))
                     _renderedData[i].Dispose();

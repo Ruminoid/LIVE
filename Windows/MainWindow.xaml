@@ -322,6 +322,20 @@
                             <TextBox Text="{Binding FrameRate, UpdateSourceTrigger=PropertyChanged}"
                                      Width="80" Grid.Column="1" HorizontalAlignment="Left" />
                         </Grid>
+                        <TextBlock Margin="6" TextWrapping="Wrap"
+                                   Text="渲染线程数不建议超过处理器核心数。" />
+                        <Grid Margin="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="渲染线程: " />
+                            <TextBox Text="{Binding ThreadCount, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="80" Grid.Column="1" HorizontalAlignment="Left" />
+                        </Grid>
+                        <Button Margin="6" Content="安装 OBS Spout 插件"
+                                HorizontalAlignment="Left" Padding="12"
+                                Click="SpoutInstallButtonBase_OnClick" />
                     </StackPanel>
                 </Grid>
                 <Grid Grid.Column="1"

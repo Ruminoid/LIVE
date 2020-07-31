@@ -100,6 +100,19 @@ namespace Ruminoid.LIVE
             }
         }
 
+        [JsonProperty]
+        private string threadCount = "4";
+
+        public string ThreadCount
+        {
+            get => threadCount;
+            set
+            {
+                threadCount = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region PropertyChanged
