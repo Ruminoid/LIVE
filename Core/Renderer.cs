@@ -221,6 +221,8 @@ namespace Ruminoid.LIVE.Core
             e.Cancel = true;
         }
 
+        private const int RenderStep = 4;
+
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
             lock (_renderLocker) _renderIndex = (int) e.Argument; // frameIndex
@@ -232,18 +234,21 @@ namespace Ruminoid.LIVE.Core
                     Task[] tasks = new Task[_threadCount];
                     for (int i = 0; i < _threadCount; i++)
                     {
-                        int r = i;
+                        int s = i * RenderStep;
                         tasks[i] = Task.Factory.StartNew(() =>
                         {
-                            if (_renderIndex + r >= _frameAdaptor.TotalFrame ||
-                                !(_renderedData[_renderIndex + r] is null)) return;
-                            RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
-                            lock (_renderedData) _renderedData[_renderIndex + r] = data;
+                            for (int r = s; r < s + RenderStep; r++)
+                            {
+                                if (_renderIndex + r >= _frameAdaptor.TotalFrame ||
+                                    !(_renderedData[_renderIndex + r] is null)) return;
+                                RuminoidImageT data = _rendererCores[r].Render(_frameAdaptor.GetMilliSec(_renderIndex + r));
+                                lock (_renderedData) _renderedData[_renderIndex + r] = data;
+                            }
                         });
                     }
 
                     Task.WaitAll(tasks);
-                    _renderIndex += _threadCount;
+                    _renderIndex += _threadCount * RenderStep;
                 }
             }
 
