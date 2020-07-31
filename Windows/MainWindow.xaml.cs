@@ -130,14 +130,17 @@ namespace Ruminoid.LIVE.Windows
 
         private void ChangeState(object sender, KeyValuePair<string, WorkingState> e)
         {
-            ((SolidColorBrush)Resources[$"{e.Key}ControlBackgroundBrush"]).Color =
-                e.Value switch
-                {
-                    WorkingState.Working => Colors.DarkOrange,
-                    WorkingState.Completed => Colors.Green,
-                    WorkingState.Failed => Colors.Red,
-                    _ => Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C)
-                };
+            Dispatcher.Invoke(() =>
+            {
+                ((SolidColorBrush) Resources[$"{e.Key}ControlBackgroundBrush"]).Color =
+                    e.Value switch
+                    {
+                        WorkingState.Working => Colors.DarkOrange,
+                        WorkingState.Completed => Colors.Green,
+                        WorkingState.Failed => Colors.Red,
+                        _ => Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C)
+                    };
+            });
         }
 
         #endregion
