@@ -101,7 +101,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string threadCount = "4";
+        private string threadCount = "3";
 
         public string ThreadCount
         {
