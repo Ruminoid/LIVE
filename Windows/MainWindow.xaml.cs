@@ -148,45 +148,48 @@ namespace Ruminoid.LIVE.Windows
         {
             ToggleButton toggle = sender as ToggleButton;
             if (toggle is null) return;
-            string err = "";
-            int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0, frameRate = 0, threadCount = 0;
-            if (!int.TryParse(Config.Current.RenderWidth, out width) ||
-                !int.TryParse(Config.Current.RenderHeight, out height)) err = "渲染大小格式有误";
-            if (err == "" && (width % 2 != 0 || height % 2 != 0 || width <= 0 || height <= 0))
-                err = "渲染大小不正确";
-            if (!int.TryParse(Config.Current.MemSize, out memSize)) err = "内存大小格式有误";
-            if (!int.TryParse(Config.Current.MinRenderFrame, out minRenderFrame) ||
-                !int.TryParse(Config.Current.MaxRenderFrame, out maxRenderFrame))
-                err = "渲染缓冲时间格式不正确";
-            if (err == "" && memSize < 300) err = "预留内存过小";
-            if (err == "" && minRenderFrame <= 0 || maxRenderFrame <= 0) err = "渲染缓冲时间过小";
-            if (!int.TryParse(Config.Current.FrameRate, out frameRate)) err = "帧率格式有误";
-            if (err == "" && frameRate < 1) err = "帧率过小";
-            if (!int.TryParse(Config.Current.ThreadCount, out threadCount)) err = "线程数格式有误";
-            if (err == "" && threadCount < 1) err = "线程数过小";
-            if (!File.Exists(Synchronizer.Current.AudioPath)) err = "音频文件路径有误";
-            if (!File.Exists(Synchronizer.Current.AssPath)) err = "ASS字幕文件路径有误";
-            if (err != "")
+
+            try
+            {
+                int width = 0, height = 0, minRenderFrame = 0, maxRenderFrame = 0, memSize = 0, frameRate = 0, threadCount = 0;
+                if (!int.TryParse(Config.Current.RenderWidth, out width) ||
+                    !int.TryParse(Config.Current.RenderHeight, out height)) throw new Exception("渲染大小格式有误");
+                if ((width % 2 != 0 || height % 2 != 0 || width <= 0 || height <= 0))
+                    throw new Exception("渲染大小不正确");
+                if (!int.TryParse(Config.Current.MemSize, out memSize)) throw new Exception("内存大小格式有误");
+                if (!int.TryParse(Config.Current.MinRenderFrame, out minRenderFrame) ||
+                    !int.TryParse(Config.Current.MaxRenderFrame, out maxRenderFrame))
+                    throw new Exception("渲染缓冲时间格式不正确");
+                if (memSize < 300) throw new Exception("预留内存过小");
+                if (minRenderFrame <= 0 || maxRenderFrame <= 0) throw new Exception("渲染缓冲时间过小");
+                if (!int.TryParse(Config.Current.FrameRate, out frameRate)) throw new Exception("帧率格式有误");
+                if (frameRate < 1) throw new Exception("帧率过小");
+                if (!int.TryParse(Config.Current.ThreadCount, out threadCount)) throw new Exception("线程数格式有误");
+                if (threadCount < 1) throw new Exception("线程数过小");
+                if (!File.Exists(Synchronizer.Current.AudioPath)) throw new Exception("音频文件路径有误");
+                if (!File.Exists(Synchronizer.Current.AssPath)) throw new Exception("ASS字幕文件路径有误");
+
+                // All Checks Passed
+                Wnd1.IsEnabled = false;
+                Synchronizer.Current.Width = width;
+                Synchronizer.Current.Height = height;
+                Synchronizer.Current.MemSize = memSize;
+                Synchronizer.Current.MinRenderFrame = minRenderFrame * frameRate;
+                Synchronizer.Current.MaxRenderFrame = maxRenderFrame * frameRate;
+                Synchronizer.Current.FrameRate = frameRate;
+                Synchronizer.Current.ThreadCount = threadCount;
+                Synchronizer.Current.Initialize();
+            }
+            catch (Exception exception)
             {
                 toggle.IsChecked = false;
                 MessageBox.Show(
-                    $"{err}。请检查您的配置。",
+                    $"{exception.Message}。请检查您的配置。",
                     "配置错误",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error,
                     MessageBoxResult.OK);
-                return;
             }
-
-            Wnd1.IsEnabled = false;
-            Synchronizer.Current.Width = width;
-            Synchronizer.Current.Height = height;
-            Synchronizer.Current.MemSize = memSize;
-            Synchronizer.Current.MinRenderFrame = minRenderFrame * frameRate;
-            Synchronizer.Current.MaxRenderFrame = maxRenderFrame * frameRate;
-            Synchronizer.Current.FrameRate = frameRate;
-            Synchronizer.Current.ThreadCount = threadCount;
-            Synchronizer.Current.Initialize();
         }
 
         private void InitializeCompleted(object sender, EventArgs e)
