@@ -49,7 +49,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string memSize = "300";
+        private string memSize = "500";
 
         public string MemSize
         {
