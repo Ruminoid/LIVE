@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -252,11 +252,12 @@ namespace Ruminoid.LIVE.Core
 
             while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
             {
+                for (int i = 0; i < _threadCount; i++)
+                    _renderManagerResetEvents[i].WaitOne();
                 lock (_renderLocker)
                 {
                     for (int threadIndex = 0; threadIndex < _threadCount; threadIndex++)
                     {
-                        _renderManagerResetEvents[threadIndex].WaitOne();
                         int targetIndex = _renderIndex + threadIndex;
                         if (targetIndex >= _frameAdaptor.TotalFrame ||
                             !(_renderedData[targetIndex] is null)) return;
