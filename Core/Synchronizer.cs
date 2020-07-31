@@ -39,14 +39,14 @@ namespace Ruminoid.LIVE.Core
 
         public Position Position { get; } = new Position();
 
-        private int _fps;
+        private int _frameRate;
 
-        public int FPS
+        public int FrameRate
         {
-            get => _fps;
+            get => _frameRate;
             set
             {
-                _fps = value;
+                _frameRate = value;
                 OnPropertyChanged();
             }
         }
@@ -193,9 +193,9 @@ namespace Ruminoid.LIVE.Core
                 MemSize,
                 MinRenderFrame,
                 MaxRenderFrame,
-                FPS);
+                FrameRate);
             _renderer.StateChanged += RendererOnStateChanged;
-            _timer = new Timer(1000 / (double) FPS)
+            _timer = new Timer(1000 / (double) FrameRate)
             {
                 AutoReset = true,
                 Enabled = false

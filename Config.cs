@@ -49,7 +49,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string memSize = "500";
+        private string memSize = "300";
 
         public string MemSize
         {
@@ -62,7 +62,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string minRenderTime = "50";
+        private string minRenderTime = "190";
 
         public string MinRenderFrame
         {
@@ -75,7 +75,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string maxRenderTime = "60";
+        private string maxRenderTime = "200";
 
         public string MaxRenderFrame
         {
@@ -88,14 +88,14 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string fps = "60";
+        private string frameRate = "60";
 
-        public string FPS
+        public string FrameRate
         {
-            get => fps;
+            get => frameRate;
             set
             {
-                fps = value;
+                frameRate = value;
                 OnPropertyChanged();
             }
         }
