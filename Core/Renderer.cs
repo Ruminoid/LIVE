@@ -228,15 +228,20 @@ namespace Ruminoid.LIVE.Core
             {
                 lock (_renderLocker)
                 {
-                    if (_renderedData[_renderIndex] is null)
-                    {
-                        RuminoidImageT data = _rendererCore.Render(_frameAdaptor.GetMilliSec(_renderIndex));
-                        lock (_renderedData)
+                    for (int i = _renderIndex; i < _renderIndex + 4; i++)
+                        ThreadPool.QueueUserWorkItem(state =>
                         {
-                            _renderedData[_renderIndex] = data;
-                        }
-                    }
-                    _renderIndex++;
+                            int r = (int) state;
+                            if (_renderedData[r] is null)
+                            {
+                                RuminoidImageT data = _rendererCore.Render(_frameAdaptor.GetMilliSec(_renderIndex));
+                                lock (_renderedData)
+                                {
+                                    _renderedData[r] = data;
+                                }
+                            }
+                        }, i);
+                    _renderIndex += 4;
                 }
             }
 
