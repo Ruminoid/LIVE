@@ -238,11 +238,12 @@ namespace Ruminoid.LIVE.Core
                     _purgeIndex = 0;
                 }
 
-                lock (_renderedData)
-                {
-                    _renderedData[_purgeIndex].Dispose();
-                    _renderedData[_purgeIndex] = null;
-                }
+                if (!(_renderedData[_purgeIndex] is null))
+                    lock (_renderedData)
+                    {
+                        _renderedData[_purgeIndex].Dispose();
+                        _renderedData[_purgeIndex] = null;
+                    }
                 _purgeIndex++;
             }
 
