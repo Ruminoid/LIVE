@@ -214,7 +214,7 @@ namespace Ruminoid.LIVE.Core
         private void PositionOnOnPositionActiveChanged()
         {
             _player.MediaElement.Seek(TimeSpan.FromMilliseconds(Position.Time));
-            _renderer.Send((int) Position.Time, true);
+            Task.Run(() => _renderer.Send((int) Position.Time, true));
         }
 
         private void PlayerOnMediaOpened(object sender, MediaOpenedEventArgs e)

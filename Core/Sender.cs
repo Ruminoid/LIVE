@@ -31,6 +31,8 @@ namespace Ruminoid.LIVE.Core
 
         private SpoutSender _sender;
 
+        private object _senderLocker;
+
         private HashSet<IntPtr> _dataCollection;
 
         #endregion
@@ -49,6 +51,8 @@ namespace Ruminoid.LIVE.Core
             _deviceContext = DeviceContext.Create();
             _glContext = _deviceContext.CreateContext(IntPtr.Zero);
             _deviceContext.MakeCurrent(_glContext);
+
+            _senderLocker = new object();
 
             // Initialize Core
             _sender = new SpoutSender();
@@ -70,13 +74,16 @@ namespace Ruminoid.LIVE.Core
 
         public unsafe void Send(IntPtr data)
         {
-            _sender.SendImage(
-                (byte*) data,
-                _width,
-                _height,
-                Gl.RGBA,
-                true,
-                0);
+            lock (_senderLocker) 
+            {
+                _sender.SendImage(
+                    (byte*) data,
+                    _width,
+                    _height,
+                    Gl.RGBA,
+                    true,
+                    0);
+            }
 
             _dataCollection.Add(data);
         }
@@ -95,6 +102,7 @@ namespace Ruminoid.LIVE.Core
         {
             _sender?.ReleaseSender(0);
             _sender?.Dispose();
+            _senderLocker = null;
         }
 
         #endregion
