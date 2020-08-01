@@ -344,7 +344,10 @@ namespace Ruminoid.LIVE.Core
             _rendererCore.Dispose();
             for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (!(_renderedData[i] is null))
+                {
                     _renderedData[i].Dispose();
+                    _renderedData[i] = null;
+                }
         }
 
         #endregion
