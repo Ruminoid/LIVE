@@ -121,7 +121,8 @@ namespace Ruminoid.LIVE.Core
 
                 _renderThreads[i] = new Thread(RenderInThread)
                 {
-                    IsBackground = true
+                    IsBackground = true,
+                    Name = $"LIVE Render Thread {i}"
                 };
                 _renderThreads[i].Start(i); // Start the Render Thread
             }
@@ -276,11 +277,14 @@ namespace Ruminoid.LIVE.Core
         private void RenderInThread(object obj)
         {
             int threadIndex = (int)obj;
-            int targetIndex = _renderTargetIndexes[threadIndex];
-            _renderResetEvents[threadIndex].WaitOne();
-            RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
-            lock (_renderedData) _renderedData[targetIndex] = data;
-            _renderManagerResetEvents[threadIndex].Set();
+            while (true)
+            {
+                _renderResetEvents[threadIndex].WaitOne();
+                int targetIndex = _renderTargetIndexes[threadIndex];
+                RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
+                lock (_renderedData) _renderedData[targetIndex] = data;
+                _renderManagerResetEvents[threadIndex].Set();
+            }
         }
 
         #endregion
