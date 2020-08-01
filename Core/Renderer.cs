@@ -119,13 +119,6 @@ namespace Ruminoid.LIVE.Core
                 _renderResetEvents[i] = new AutoResetEvent(false);
                 _renderResetEvents[i].Reset(); // Initialize the Render Thread Flag and reset it's state
                 _renderManagerResetEvents[i] = new AutoResetEvent(false);
-                _renderManagerResetEvents[i].Set(); // Initialize the Render Manager Flag and set it's state to true
-
-                // So now, the WaitOne() method will pass when the Render Manager
-                // runs for the first time, so that it can start assign tasks
-                // for the Render Threads.
-                // But the Render Threads will block at the first WaitOne() method,
-                // waiting the Render Manager to assign.
 
                 _renderThreads[i] = new Thread(RenderInThread)
                 {
@@ -148,7 +141,7 @@ namespace Ruminoid.LIVE.Core
                 WorkerSupportsCancellation = true
             }; // Initialize the Render Manager
             _renderWorker.DoWork += DoRenderWork;
-            TriggerRender(0, true);
+            TriggerRender(0, true, true);
             // And start the Manager, goto the DoRenderWork() method
 
             _timer = new DispatcherTimer(
@@ -216,7 +209,7 @@ namespace Ruminoid.LIVE.Core
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
         }
 
-        private void TriggerRender(int frameIndex, bool restart)
+        private void TriggerRender(int frameIndex, bool restart, bool init = false)
         {
             if (restart)
             {
@@ -226,7 +219,7 @@ namespace Ruminoid.LIVE.Core
                     // Ignore
                 }
             }
-            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync(frameIndex);
+            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync((frameIndex, init));
         }
 
         #endregion
@@ -258,12 +251,17 @@ namespace Ruminoid.LIVE.Core
 
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
-            lock (_renderLocker) _renderIndex = (int) e.Argument; // frameIndex
+            var (frameIndex, init) = ((int, bool)) e.Argument;
+            lock (_renderLocker) _renderIndex = frameIndex;
 
             while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
             {
-                for (int i = 0; i < _threadCount; i++)
-                    _renderManagerResetEvents[i].WaitOne(); // It should be passed at the first time, but it freeze
+                if (init)
+                    init = false;
+                else
+                    for (int i = 0; i < _threadCount; i++)
+                        _renderManagerResetEvents[i].WaitOne();
+
                 lock (_renderLocker)
                 {
                     for (int threadIndex = 0; threadIndex < _threadCount; threadIndex++)
