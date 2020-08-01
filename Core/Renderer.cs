@@ -342,6 +342,7 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
             _rendererCore.Dispose();
+            Sender.Current.Release();
             for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (!(_renderedData[i] is null))
                 {

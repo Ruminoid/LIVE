@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -30,6 +31,8 @@ namespace Ruminoid.LIVE.Core
 
         private SpoutSender _sender;
 
+        private Collection<IntPtr> _dataCollection;
+
         #endregion
 
         #region User Data
@@ -58,6 +61,7 @@ namespace Ruminoid.LIVE.Core
             _height = height;
 
             _sender.UpdateSender(SenderName, _width, _height);
+            _dataCollection = new Collection<IntPtr>();
         }
 
         #endregion
@@ -73,12 +77,19 @@ namespace Ruminoid.LIVE.Core
                 Gl.RGBA,
                 true,
                 0);
-            Marshal.FreeHGlobal(data);
+
+            _dataCollection.Add(data);
         }
 
         #endregion
 
         #region Dispose
+
+        public void Release()
+        {
+            foreach (IntPtr ptr in _dataCollection) Marshal.FreeHGlobal(ptr);
+            _dataCollection = null;
+        }
 
         public void Dispose()
         {
