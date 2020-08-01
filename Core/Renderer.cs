@@ -187,6 +187,7 @@ namespace Ruminoid.LIVE.Core
                     else
                     {
                         _renderWorker.CancelAsync();
+                        ReleaseRenderWorker();
                         RenderState = WorkingState.Completed;
                     }
                 }
@@ -214,6 +215,7 @@ namespace Ruminoid.LIVE.Core
             if (restart)
             {
                 _renderWorker.CancelAsync();
+                ReleaseRenderWorker();
                 while (_renderWorker.IsBusy)
                 {
                     // Ignore
@@ -275,6 +277,12 @@ namespace Ruminoid.LIVE.Core
             e.Cancel = true;
         }
 
+        private void ReleaseRenderWorker()
+        {
+            for (int i = 0; i < _threadCount; i++)
+                _renderManagerResetEvents[i].Set();
+        }
+
         private void RenderInThread(object obj)
         {
             int threadIndex = (int)obj;
@@ -318,6 +326,7 @@ namespace Ruminoid.LIVE.Core
             _timer.Tick -= TimerTick;
             _timer = null;
             _renderWorker.CancelAsync();
+            ReleaseRenderWorker();
             _renderWorker.DoWork -= DoRenderWork;
             _renderWorker.Dispose();
             for (int i = 0; i < _threadCount; i++)
