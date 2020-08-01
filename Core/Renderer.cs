@@ -117,8 +117,7 @@ namespace Ruminoid.LIVE.Core
             for (int i = 0; i < threadCount; i++)
             {
                 _renderResetEvents[i] = new AutoResetEvent(false);
-                _renderResetEvents[i].Reset(); // Initialize the Render Thread Flag and reset it's state
-                _renderManagerResetEvents[i] = new AutoResetEvent(false);
+                _renderManagerResetEvents[i] = new AutoResetEvent(true);
 
                 _renderThreads[i] = new Thread(RenderInThread)
                 {
@@ -141,7 +140,7 @@ namespace Ruminoid.LIVE.Core
                 WorkerSupportsCancellation = true
             }; // Initialize the Render Manager
             _renderWorker.DoWork += DoRenderWork;
-            TriggerRender(0, true, true);
+            TriggerRender(0, true);
             // And start the Manager, goto the DoRenderWork() method
 
             _timer = new DispatcherTimer(
@@ -209,7 +208,7 @@ namespace Ruminoid.LIVE.Core
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
         }
 
-        private void TriggerRender(int frameIndex, bool restart, bool init = false)
+        private void TriggerRender(int frameIndex, bool restart)
         {
             if (restart)
             {
@@ -219,7 +218,7 @@ namespace Ruminoid.LIVE.Core
                     // Ignore
                 }
             }
-            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync((frameIndex, init));
+            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync(frameIndex);
         }
 
         #endregion
@@ -251,16 +250,11 @@ namespace Ruminoid.LIVE.Core
 
         private void DoRenderWork(object sender, DoWorkEventArgs e)
         {
-            var (frameIndex, init) = ((int, bool)) e.Argument;
-            lock (_renderLocker) _renderIndex = frameIndex;
+            lock (_renderLocker) _renderIndex = (int)e.Argument; // frameIndex
 
             while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
             {
-                if (init)
-                    init = false;
-                else
-                    for (int i = 0; i < _threadCount; i++)
-                        _renderManagerResetEvents[i].WaitOne();
+                WaitHandle.WaitAll(_renderManagerResetEvents);
 
                 lock (_renderLocker)
                 {
@@ -268,7 +262,7 @@ namespace Ruminoid.LIVE.Core
                     {
                         int targetIndex = _renderIndex + threadIndex;
                         if (targetIndex >= _frameAdaptor.TotalFrame ||
-                            !(_renderedData[targetIndex] is null)) return;
+                            !(_renderedData[targetIndex] is null)) continue;
                         lock (_renderTargetIndexes) _renderTargetIndexes[threadIndex] = targetIndex;
                         _renderResetEvents[threadIndex].Set();
                     }
@@ -282,8 +276,8 @@ namespace Ruminoid.LIVE.Core
         private void RenderInThread(object obj)
         {
             int threadIndex = (int)obj;
-            _renderResetEvents[threadIndex].WaitOne(); // Block and wait
             int targetIndex = _renderTargetIndexes[threadIndex];
+            _renderResetEvents[threadIndex].WaitOne();
             RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
             lock (_renderedData) _renderedData[targetIndex] = data;
             _renderManagerResetEvents[threadIndex].Set();
@@ -334,7 +328,6 @@ namespace Ruminoid.LIVE.Core
             _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
             _memoryMonitor?.Dispose();
             _rendererCore.Dispose();
-            Sender.Current.Dispose();
             for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
                 if (!(_renderedData[i] is null))
                     _renderedData[i].Dispose();
