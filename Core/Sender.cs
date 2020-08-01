@@ -64,16 +64,16 @@ namespace Ruminoid.LIVE.Core
 
         #region Methods
 
-        public unsafe void Send(byte* data)
+        public unsafe void Send(IntPtr data)
         {
             _sender.SendImage(
-                data,
+                (byte*) data,
                 _width,
                 _height,
                 Gl.RGBA,
                 true,
                 0);
-            Marshal.FreeHGlobal(new IntPtr(data));
+            Marshal.FreeHGlobal(data);
         }
 
         #endregion
