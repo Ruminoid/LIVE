@@ -31,7 +31,7 @@ namespace Ruminoid.LIVE.Core
 
         private SpoutSender _sender;
 
-        private Collection<IntPtr> _dataCollection;
+        private HashSet<IntPtr> _dataCollection;
 
         #endregion
 
@@ -61,7 +61,7 @@ namespace Ruminoid.LIVE.Core
             _height = height;
 
             _sender.UpdateSender(SenderName, _width, _height);
-            _dataCollection = new Collection<IntPtr>();
+            _dataCollection = new HashSet<IntPtr>();
         }
 
         #endregion
