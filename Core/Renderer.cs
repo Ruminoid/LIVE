@@ -155,7 +155,7 @@ namespace Ruminoid.LIVE.Core
 
         #region Methods
 
-        public void Send(int milliSec, bool seek = false)
+        public unsafe void Send(int milliSec, bool seek = false)
         {
             int frameIndex = _frameAdaptor.GetFrameIndex(milliSec);
             RuminoidImageT imageRaw = _renderedData[frameIndex];

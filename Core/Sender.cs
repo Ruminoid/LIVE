@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using OpenGL;
@@ -63,16 +64,16 @@ namespace Ruminoid.LIVE.Core
 
         #region Methods
 
-        public unsafe void Send(byte[] data)
+        public unsafe void Send(byte* data)
         {
-            fixed (byte* pData = data)
-                _sender.SendImage(
-                    pData,
-                    _width,
-                    _height,
-                    Gl.RGBA,
-                    true,
-                    0);
+            _sender.SendImage(
+                data,
+                _width,
+                _height,
+                Gl.RGBA,
+                true,
+                0);
+            Marshal.FreeHGlobal(new IntPtr(data));
         }
 
         #endregion
