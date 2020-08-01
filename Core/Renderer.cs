@@ -100,7 +100,7 @@ namespace Ruminoid.LIVE.Core
             _renderIndex = 0;
             _playerIndex = 0;
 
-            _renderLocker = new object();
+            _renderLocker = new object(); // Initialize the locker of _renderIndex
 
             // Initialize Core
             _memoryMonitor = new MemoryMonitor(memSize);
@@ -117,14 +117,21 @@ namespace Ruminoid.LIVE.Core
             for (int i = 0; i < threadCount; i++)
             {
                 _renderResetEvents[i] = new AutoResetEvent(false);
-                _renderResetEvents[i].Reset();
+                _renderResetEvents[i].Reset(); // Initialize the Render Thread Flag and reset it's state
                 _renderManagerResetEvents[i] = new AutoResetEvent(false);
-                _renderManagerResetEvents[i].Set();
+                _renderManagerResetEvents[i].Set(); // Initialize the Render Manager Flag and set it's state to true
+
+                // So now, the WaitOne() method will pass when the Render Manager
+                // runs for the first time, so that it can start assign tasks
+                // for the Render Threads.
+                // But the Render Threads will block at the first WaitOne() method,
+                // waiting the Render Manager to assign.
+
                 _renderThreads[i] = new Thread(RenderInThread)
                 {
                     IsBackground = true
                 };
-                _renderThreads[i].Start(i);
+                _renderThreads[i].Start(i); // Start the Render Thread
             }
 
             // Initialize Worker
@@ -139,9 +146,10 @@ namespace Ruminoid.LIVE.Core
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
-            };
+            }; // Initialize the Render Manager
             _renderWorker.DoWork += DoRenderWork;
             TriggerRender(0, true);
+            // And start the Manager, goto the DoRenderWork() method
 
             _timer = new DispatcherTimer(
                 TimeSpan.FromSeconds(1),
@@ -255,7 +263,7 @@ namespace Ruminoid.LIVE.Core
             while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
             {
                 for (int i = 0; i < _threadCount; i++)
-                    _renderManagerResetEvents[i].WaitOne();
+                    _renderManagerResetEvents[i].WaitOne(); // It should be passed at the first time, but it freeze
                 lock (_renderLocker)
                 {
                     for (int threadIndex = 0; threadIndex < _threadCount; threadIndex++)
@@ -276,7 +284,7 @@ namespace Ruminoid.LIVE.Core
         private void RenderInThread(object obj)
         {
             int threadIndex = (int)obj;
-            _renderResetEvents[threadIndex].WaitOne();
+            _renderResetEvents[threadIndex].WaitOne(); // Block and wait
             int targetIndex = _renderTargetIndexes[threadIndex];
             RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
             lock (_renderedData) _renderedData[targetIndex] = data;
