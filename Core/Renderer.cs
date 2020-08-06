@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -8,73 +9,37 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
+using C5;
 using Ruminoid.Common.Renderer.Core;
 using Ruminoid.Common.Renderer.Utilities;
 using Ruminoid.Common.Utilities;
+using Helios.Concurrency;
 
 namespace Ruminoid.LIVE.Core
 {
     class Renderer : IDisposable
     {
-        #region Core Data
-
-        private AssRenderCore _rendererCore;
-        private MemoryMonitor _memoryMonitor;
-        private DispatcherTimer _timer;
+        private AssRenderCore _renderCore;
         private FrameAdaptor _frameAdaptor;
 
-        #endregion
+        private Dictionary<int, RenderedImage> _renderedData = new Dictionary<int, RenderedImage>();
+        private ulong _totalDataBytes = 0;
 
-        #region Worker Data
+        private DedicatedThreadPool _renderPool;
+        private DedicatedThreadPool _manipulatePool;
+        private ThreadLocal<RenderCoreRenderer> _renderers;
 
-        private RuminoidImageT[] _renderedData;
+        private int _width, _height;
+        private int _playerIndex, _totalFrames;
+        private int _currentRenderTasks;
+        private int _maxPerBunch, _minPrerender, _maxPrerender;
+        private ulong _maxMemory;
 
-        private BackgroundWorker _purgeWorker;
-        private BackgroundWorker _renderWorker;
+        private bool IsDispatching => _currentRenderTasks > 0;
 
-        private Thread[] _renderThreads;
-        private AutoResetEvent[] _renderResetEvents;
-        private AutoResetEvent[] _renderManagerResetEvents;
-        private int[] _renderTargetIndexes;
-
-        private int _purgeIndex;
-        private int _renderIndex;
-        private int _playerIndex;
-
-        private object _renderLocker;
-
-        #endregion
-
-        #region User Data
-
-        private int _minRenderFrame;
-        private int _maxRenderFrame;
-        private int _threadCount;
-
-        #endregion
-
-        #region Display Data
-
-        private WorkingState _renderState;
-
-        private WorkingState RenderState
-        {
-            get => _renderState;
-            set
-            {
-                if (_renderState != value)
-                    StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", value));
-                _renderState = value;
-            }
-        }
-
-        #endregion
-
-        #region Constructor
-
-        public Renderer(
-            string assPath,
+        public Renderer(string assPath,
             int width,
             int height,
             int total,
@@ -84,273 +49,120 @@ namespace Ruminoid.LIVE.Core
             int frameRate,
             int threadCount,
             int glyphMax,
-            int bitmapMax)
+            int bitmapMax) // todo more parameter
         {
-            // Initialize User Data
-            _minRenderFrame = minRenderFrame;
-            _maxRenderFrame = maxRenderFrame;
-            _threadCount = threadCount;
-
-            // Initialize Core Data
+            _width = width;
+            _height = height;
             _frameAdaptor = new FrameAdaptor(frameRate, total);
-            _renderedData = new RuminoidImageT[_frameAdaptor.TotalFrame];
-
-            // Initialize Worker Data
-            _purgeIndex = 0;
-            _renderIndex = 0;
+            _minPrerender = minRenderFrame;
+            _maxPrerender = maxRenderFrame;
+            _maxMemory = (ulong)memSize;
+            _maxPerBunch = 16;
             _playerIndex = 0;
+            _totalFrames = total;
 
-            _renderLocker = new object(); // Initialize the locker of _renderIndex
-
-            // Initialize Core
-            _memoryMonitor = new MemoryMonitor(memSize);
-            _memoryMonitor.StateChanged += MemoryMonitorOnStateChanged;
             string subData = File.ReadAllText(assPath);
-            _rendererCore = new AssRenderCore(ref subData, width, height, threadCount, glyphMax, bitmapMax);
-            Sender.Current.Initialize((uint) width, (uint) height);
+            _renderCore = new AssRenderCore(ref subData, width, height, glyphMax, bitmapMax);
+            Sender.Current.Initialize((uint)width, (uint)height);
 
-            // Initialize Render Threads
-            _renderThreads = new Thread[threadCount];
-            _renderResetEvents = new AutoResetEvent[threadCount];
-            _renderManagerResetEvents = new AutoResetEvent[threadCount];
-            _renderTargetIndexes = new int[threadCount];
-            for (int i = 0; i < threadCount; i++)
-            {
-                _renderResetEvents[i] = new AutoResetEvent(false);
-                _renderManagerResetEvents[i] = new AutoResetEvent(true);
+            _renderPool =
+                new DedicatedThreadPool(new DedicatedThreadPoolSettings(threadCount, ThreadType.Background,
+                    "Render-Pool"));
+            _manipulatePool =
+                new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, // Must be 1 here
+                    "Render-Manipulate-Pool"));
 
-                _renderThreads[i] = new Thread(RenderInThread)
-                {
-                    IsBackground = true,
-                    Name = $"LIVE Render Thread {i}"
-                };
-                _renderThreads[i].Start(i); // Start the Render Thread
-            }
-
-            // Initialize Worker
-            _purgeWorker = new BackgroundWorker
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
-            _purgeWorker.DoWork += DoPurgeWork;
-
-            _renderWorker = new BackgroundWorker
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            }; // Initialize the Render Manager
-            _renderWorker.DoWork += DoRenderWork;
-            TriggerRender(0, true);
-            // And start the Manager, goto the DoRenderWork() method
-
-            _timer = new DispatcherTimer(
-                TimeSpan.FromSeconds(1),
-                DispatcherPriority.Normal,
-                TimerTick,
-                Dispatcher.CurrentDispatcher);
-            _timer.Start();
+            _renderers = new ThreadLocal<RenderCoreRenderer>(() => _renderCore.CreateRenderer());
+            _manipulatePool.QueueUserWorkItem(DispatchRender);
         }
 
-        #endregion
-
-        #region Methods
-
-        public void Send(int milliSec, bool seek = false)
+        public void Send(int time)
         {
-            int frameIndex = _frameAdaptor.GetFrameIndex(milliSec);
-            RuminoidImageT imageRaw = _renderedData[frameIndex];
-            if (!(imageRaw is null))
-                Sender.Current.Send(AssRenderCore.Decode(imageRaw));
-            _playerIndex = frameIndex;
-            if (seek)
+            _manipulatePool.QueueUserWorkItem(() => SendOnDispatcher(_frameAdaptor.GetFrameIndex(time)));
+        }
+
+        private void DispatchRender()
+        {
+            if (IsDispatching || _totalDataBytes > _maxMemory) return;
+            _currentRenderTasks = 0;
+            int cur = _playerIndex;
+            for (int i = 0; i < _maxPerBunch && cur < _totalFrames && cur <= _playerIndex + _maxPrerender; i++)
             {
-                RenderState = WorkingState.Failed;
-                TriggerRender(frameIndex, true);
+                // todo better algorithm
+                while (_renderedData.ContainsKey(cur)) cur++;
+                if (!(cur < _totalFrames && cur <= _playerIndex + _maxPrerender)) break;
+
+                _renderedData[cur] = RenderedImage.Empty;;
+                _currentRenderTasks++;
+                var curLocal = cur;
+                _renderPool.QueueUserWorkItem(() => Render(curLocal));
             }
         }
 
-        private void TimerTick(object sender, EventArgs e)
+        private void CheckPurge()
         {
-            lock (_renderLocker)
+            if (_totalDataBytes <= _maxMemory)
+                return;
+
+            foreach (var s in _renderedData.Where(it => !WithinPrerenderRange(it.Key)).ToList())
             {
-                if (_playerIndex <= _renderIndex)
-                {
-                    if (_renderIndex - _playerIndex < _minRenderFrame)
-                    {
-                        TriggerRender(_playerIndex, false);
-                    }
-                    else if (_renderIndex - _playerIndex < _maxRenderFrame)
-                    {
-                        RenderState = WorkingState.Working;
-                    }
-                    else
-                    {
-                        _renderWorker.CancelAsync();
-                        ReleaseRenderWorker();
-                        RenderState = WorkingState.Completed;
-                    }
-                }
-                else
-                {
-                    RenderState = WorkingState.Failed;
-                }
+                _totalDataBytes -= (uint)s.Value.Buffer.Length;
+                _renderedData.Remove(s.Key);
             }
         }
 
-        private void TriggerPurge()
+        private bool WithinPrerenderRange(int index)
         {
-            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Working));
-            if (!_purgeWorker.IsBusy) _purgeWorker.RunWorkerAsync();
+            return index >= _playerIndex - _maxPrerender / 10 && index <= _playerIndex + _maxPrerender;
         }
 
-        private void CancelPurge()
+        private void OnRenderFinish(int frame, RenderedImage image)
         {
-            if (_purgeWorker.IsBusy) _purgeWorker.CancelAsync();
-            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
-        }
+            _renderedData[frame] = image;
+            _totalDataBytes += (ulong) image.Buffer.Length;
+            _currentRenderTasks--;
 
-        private void TriggerRender(int frameIndex, bool restart)
-        {
-            if (restart)
+            if (!IsDispatching)
             {
-                _renderWorker.CancelAsync();
-                ReleaseRenderWorker();
-                while (_renderWorker.IsBusy)
-                {
-                    // Ignore
-                }
-            }
-            if (!_renderWorker.IsBusy) _renderWorker.RunWorkerAsync(frameIndex);
-        }
-
-        #endregion
-
-        #region Workers
-
-        private void DoPurgeWork(object sender, DoWorkEventArgs e)
-        {
-            while (!_purgeWorker.CancellationPending)
-            {
-                if (_purgeIndex >= _playerIndex && _purgeIndex < _playerIndex + _maxRenderFrame + 10)
-                    _purgeIndex = _playerIndex + _maxRenderFrame + 10;
-                if (_purgeIndex >= _frameAdaptor.TotalFrame)
-                {
-                    Thread.Sleep(5000);
-                    _purgeIndex = 0;
-                }
-
-                if (!(_renderedData[_purgeIndex] is null))
-                    lock (_renderedData)
-                    {
-                        _renderedData[_purgeIndex].Dispose();
-                        _renderedData[_purgeIndex] = null;
-                    }
-                _purgeIndex++;
-            }
-
-            e.Cancel = true;
-        }
-
-        private void DoRenderWork(object sender, DoWorkEventArgs e)
-        {
-            lock (_renderLocker) _renderIndex = (int)e.Argument; // frameIndex
-
-            while (!_renderWorker.CancellationPending && _renderIndex < _frameAdaptor.TotalFrame)
-            {
-                WaitHandle.WaitAll(_renderManagerResetEvents);
-
-                lock (_renderLocker)
-                {
-                    for (int threadIndex = 0; threadIndex < _threadCount; threadIndex++)
-                    {
-                        int targetIndex = _renderIndex + threadIndex;
-                        if (targetIndex >= _frameAdaptor.TotalFrame ||
-                            !(_renderedData[targetIndex] is null)) continue;
-                        lock (_renderTargetIndexes) _renderTargetIndexes[threadIndex] = targetIndex;
-                        _renderResetEvents[threadIndex].Set();
-                    }
-                    _renderIndex += _threadCount;
-                }
-            }
-
-            e.Cancel = true;
-        }
-
-        private void ReleaseRenderWorker()
-        {
-            for (int i = 0; i < _threadCount; i++)
-                _renderManagerResetEvents[i].Set();
-        }
-
-        private void RenderInThread(object obj)
-        {
-            int threadIndex = (int)obj;
-            while (true)
-            {
-                _renderResetEvents[threadIndex].WaitOne();
-                int targetIndex = _renderTargetIndexes[threadIndex];
-                RuminoidImageT data = _rendererCore.Render(threadIndex, _frameAdaptor.GetMilliSec(targetIndex));
-                lock (_renderedData) _renderedData[targetIndex] = data;
-                _renderManagerResetEvents[threadIndex].Set();
+                CheckPurge();
+                DispatchRender();
             }
         }
 
-        #endregion
-
-        #region Event Triggers & Processors
-
-        private void MemoryMonitorOnStateChanged(object sender, WorkingState e)
+        private void SendOnDispatcher(int frame)
         {
-            StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Memory", e));
-            switch (e)
+            _playerIndex = frame;
+            if (!_renderedData.TryGetValue(frame, out var image))
             {
-                case WorkingState.Completed:
-                    CancelPurge();
-                    break;
-                case WorkingState.Failed:
-                    TriggerPurge();
-                    break;
+                if (IsDispatching)
+                    DispatchRender();
+                return;
             }
+
+            if (ReferenceEquals(image, RenderedImage.Empty))
+                return;
+
+            Sender.Current.Send(image);
+
+            if (!IsDispatching && !_renderedData.ContainsKey(frame + _minPrerender))
+                DispatchRender();
         }
 
-        public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
-
-        #endregion
-
-        #region Dispose
+        private void Render(int frame)
+        {
+            var ms = _frameAdaptor.GetMilliSec(frame);
+            var rendered = _renderers.Value.Render(_width, _height, ms);
+            _manipulatePool.QueueUserWorkItem(() => OnRenderFinish(frame, rendered));
+        }
 
         public void Dispose()
         {
-            _timer.Stop();
-            _timer.Tick -= TimerTick;
-            _timer = null;
-            _renderWorker.CancelAsync();
-            ReleaseRenderWorker();
-            _renderWorker.DoWork -= DoRenderWork;
-            _renderWorker.Dispose();
-            for (int i = 0; i < _threadCount; i++)
-            {
-                _renderThreads[i].Abort();
-                _renderResetEvents[i].Dispose();
-                _renderManagerResetEvents[i].Dispose();
-            }
-            _purgeWorker.CancelAsync();
-            _purgeWorker.DoWork -= DoPurgeWork;
-            _purgeWorker.Dispose();
-            _renderLocker = null;
-            _memoryMonitor.StateChanged -= MemoryMonitorOnStateChanged;
-            _memoryMonitor?.Dispose();
-            _rendererCore.Dispose();
-            Sender.Current.Release();
-            for (int i = 0; i < _frameAdaptor.TotalFrame; i++)
-                if (!(_renderedData[i] is null))
-                {
-                    _renderedData[i].Dispose();
-                    _renderedData[i] = null;
-                }
-        }
+            _manipulatePool.Dispose();
+            _renderPool.Dispose();
 
-        #endregion
+            foreach (var renderer in _renderers.Values)
+                renderer.Dispose();
+            _renderCore.Dispose();
+        }
     }
 }
