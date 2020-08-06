@@ -63,7 +63,7 @@ namespace Ruminoid.LIVE.Core
                 new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, // Must be 1 here
                     "Render-Manipulate-Pool"));
 
-            _renderers = new ThreadLocal<RenderCoreRenderer>(() => _renderCore.CreateRenderer());
+            _renderers = new ThreadLocal<RenderCoreRenderer>(() => _renderCore.CreateRenderer(), true);
             _manipulatePool.QueueUserWorkItem(DispatchRender);
         }
 
