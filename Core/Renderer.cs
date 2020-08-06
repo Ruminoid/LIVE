@@ -89,7 +89,7 @@ namespace Ruminoid.LIVE.Core
                 _currentRenderTasks++;
                 bunch.Add(cur);
 
-                if (bunch.Count < _maxPerSubbunch) continue;
+                if (bunch.Count <= _maxPerSubbunch) continue;
                 var bunchLocal = bunch;
                 _renderPool.QueueUserWorkItem(() => Render(bunchLocal));
                 bunch = new List<int>();
