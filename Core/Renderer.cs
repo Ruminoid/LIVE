@@ -1,20 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
-using C5;
 using Ruminoid.Common.Renderer.Core;
 using Ruminoid.Common.Renderer.Utilities;
-using Ruminoid.Common.Utilities;
 using Helios.Concurrency;
 
 namespace Ruminoid.LIVE.Core
