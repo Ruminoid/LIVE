@@ -24,7 +24,7 @@ namespace Ruminoid.LIVE.Core
         private int _width, _height;
         private int _playerIndex, _totalFrames;
         private int _currentRenderTasks;
-        private int _maxPerBunch, _minPrerender, _maxPrerender;
+        private int _maxPerBunch, _maxPerSubbunch, _minPrerender, _maxPrerender;
         private ulong _maxMemory;
 
         private bool IsDispatching => _currentRenderTasks > 0;
@@ -47,7 +47,8 @@ namespace Ruminoid.LIVE.Core
             _minPrerender = minRenderFrame;
             _maxPrerender = maxRenderFrame;
             _maxMemory = (ulong)memSize;
-            _maxPerBunch = 16;
+            _maxPerBunch = threadCount;
+            _maxPerSubbunch = 8;
             _playerIndex = 0;
             _totalFrames = total;
 
@@ -76,41 +77,55 @@ namespace Ruminoid.LIVE.Core
             if (IsDispatching || _totalDataBytes > _maxMemory) return;
             _currentRenderTasks = 0;
             int cur = _playerIndex;
-            for (int i = 0; i < _maxPerBunch && cur < _totalFrames && cur <= _playerIndex + _maxPrerender; i++)
+
+            var bunch = new List<int>();
+            for (int i = 0; i < _maxPerBunch * _maxPerSubbunch && cur < _totalFrames && cur <= _playerIndex + _maxPrerender; i++)
             {
                 // todo better algorithm
                 while (_renderedData.ContainsKey(cur)) cur++;
                 if (!(cur < _totalFrames && cur <= _playerIndex + _maxPrerender)) break;
 
-                _renderedData[cur] = RenderedImage.Empty;;
+                _renderedData[cur] = RenderedImage.Empty;
                 _currentRenderTasks++;
-                var curLocal = cur;
-                _renderPool.QueueUserWorkItem(() => Render(curLocal));
+                bunch.Add(cur);
+
+                if (bunch.Count < _maxPerSubbunch) continue;
+                var bunchLocal = bunch;
+                _renderPool.QueueUserWorkItem(() => Render(bunchLocal));
+                bunch = new List<int>();
             }
+            if (bunch.Count > 0)
+                _renderPool.QueueUserWorkItem(() => Render(bunch));
         }
 
-        private void CheckPurge()
+        private void CheckPurge(bool urgent = false)
         {
-            if (_totalDataBytes <= _maxMemory)
+            if (!urgent && _totalDataBytes <= _maxMemory)
                 return;
 
-            foreach (var s in _renderedData.Where(it => !WithinPrerenderRange(it.Key)).ToList())
+            foreach (var s in _renderedData.Where(it => !WithinPrerenderRange(it.Key, urgent)).ToList())
             {
                 _totalDataBytes -= (uint)s.Value.Buffer.Length;
                 _renderedData.Remove(s.Key);
             }
         }
 
-        private bool WithinPrerenderRange(int index)
+        private bool WithinPrerenderRange(int index, bool urgent)
         {
+            if (urgent)
+                return index >= _playerIndex && index <= _playerIndex - 50;
             return index >= _playerIndex - _maxPrerender / 10 && index <= _playerIndex + _maxPrerender;
         }
 
-        private void OnRenderFinish(int frame, RenderedImage image)
+        private void OnRenderFinish(List<KeyValuePair<int, RenderedImage>> results)
         {
-            _renderedData[frame] = image;
-            _totalDataBytes += (ulong) image.Buffer.Length;
-            _currentRenderTasks--;
+            foreach (var result in results)
+            {
+                _renderedData[result.Key] = result.Value;
+                _totalDataBytes += (ulong)result.Value.Buffer.Length;
+            }
+
+            _currentRenderTasks -= results.Count;
 
             if (!IsDispatching)
             {
@@ -124,8 +139,9 @@ namespace Ruminoid.LIVE.Core
             _playerIndex = frame;
             if (!_renderedData.TryGetValue(frame, out var image))
             {
-                if (IsDispatching)
-                    DispatchRender();
+                if (IsDispatching) return;
+                CheckPurge(true);
+                DispatchRender();
                 return;
             }
 
@@ -138,11 +154,15 @@ namespace Ruminoid.LIVE.Core
                 DispatchRender();
         }
 
-        private void Render(int frame)
+        private void Render(List<int> frames)
         {
-            var ms = _frameAdaptor.GetMilliSec(frame);
-            var rendered = _renderers.Value.Render(_width, _height, ms);
-            _manipulatePool.QueueUserWorkItem(() => OnRenderFinish(frame, rendered));
+            var results = new List<KeyValuePair<int, RenderedImage>>();
+            foreach (var frame in frames)
+            {
+                var ms = _frameAdaptor.GetMilliSec(frame);
+                results.Add(new KeyValuePair<int, RenderedImage>(frame, _renderers.Value.Render(_width, _height, ms)));
+            }
+            _manipulatePool.QueueUserWorkItem(() => OnRenderFinish(results));
         }
 
         public void Dispose()
