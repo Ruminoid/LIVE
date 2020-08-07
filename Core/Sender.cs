@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Helios.Concurrency;
 using OpenGL;
+using Ruminoid.Common.Renderer.Core;
 using Spout.Interop;
 
 namespace Ruminoid.LIVE.Core
@@ -29,17 +31,17 @@ namespace Ruminoid.LIVE.Core
 
         #region Core Data
 
+        private DedicatedThreadPool _sendPool;
         private SpoutSender _sender;
 
         //private object _senderLocker;
-
-        private HashSet<IntPtr> _dataCollection;
 
         #endregion
 
         #region User Data
 
         private uint _width = 1920, _height = 1080;
+        private byte[] buffer = null;
 
         #endregion
 
@@ -47,45 +49,62 @@ namespace Ruminoid.LIVE.Core
 
         public Sender()
         {
-            // Initialize Static Core
-            _deviceContext = DeviceContext.Create();
-            _glContext = _deviceContext.CreateContext(IntPtr.Zero);
-            _deviceContext.MakeCurrent(_glContext);
+            _sendPool =
+                new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background,
+                    "Send-Pool"));
+            _sendPool.QueueUserWorkItem(() =>
+            {
+                // Initialize Static Core
+                _deviceContext = DeviceContext.Create();
+                _glContext = _deviceContext.CreateContext(IntPtr.Zero);
+                _deviceContext.MakeCurrent(_glContext);
 
-            //_senderLocker = new object();
+                //_senderLocker = new object();
 
-            // Initialize Core
-            _sender = new SpoutSender();
-            _sender.CreateSender(SenderName, _width, _height, 0);
+                // Initialize Core
+                _sender = new SpoutSender();
+                _sender.CreateSender(SenderName, _width, _height, 0);
+            });
         }
 
         public void Initialize(uint width = 1920, uint height = 1080)
         {
-            _width = width;
-            _height = height;
+            _sendPool.QueueUserWorkItem(() =>
+            {
+                _width = width;
+                _height = height;
 
-            _sender.UpdateSender(SenderName, _width, _height);
-            _dataCollection = new HashSet<IntPtr>();
+                _deviceContext.MakeCurrent(_glContext);
+                _sender.UpdateSender(SenderName, _width, _height);
+            });
         }
 
         #endregion
 
         #region Methods
 
-        public unsafe void Send(IntPtr data)
+        public unsafe void Send(RenderedImage image)
         {
-            //lock (_senderLocker) 
-            //{
-                _sender.SendImage(
-                    (byte*) data,
-                    _width,
-                    _height,
-                    Gl.RGBA,
-                    true,
-                    0);
-            //}
+            _sendPool.QueueUserWorkItem(() =>
+            {
+                _deviceContext.MakeCurrent(_glContext);
+                var (decoded, nBuffer) = AssRenderCore.Decode(buffer, image);
+                buffer = nBuffer;
+                //lock (_senderLocker)
+                //{
+                fixed (byte* unmanaged = decoded.Buffer)
+                {
+                    _sender.SendImage(
+                        unmanaged,
+                        _width,
+                        _height,
+                        Gl.RGBA,
+                        false,
+                        0);
+                }
+            });
 
-            _dataCollection.Add(data);
+            //}
         }
 
         #endregion
@@ -94,14 +113,17 @@ namespace Ruminoid.LIVE.Core
 
         public void Release()
         {
-            foreach (IntPtr ptr in _dataCollection) Marshal.FreeHGlobal(ptr);
-            _dataCollection = null;
         }
 
         public void Dispose()
         {
-            _sender?.ReleaseSender(0);
-            _sender?.Dispose();
+            _sendPool.QueueUserWorkItem(() =>
+            {
+                _sender?.ReleaseSender(0);
+                _sender?.Dispose();
+            });
+            _sendPool.Dispose();
+            _sendPool.WaitForThreadsExit();
             //_senderLocker = null;
         }
 
