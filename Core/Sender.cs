@@ -75,7 +75,7 @@ namespace Ruminoid.LIVE.Core
                 _height = height;
 
                 _deviceContext.MakeCurrent(_glContext);
-                //_sender.UpdateSender(SenderName, _width, _height);
+                _sender.UpdateSender(SenderName, _width, _height);
             });
         }
 
