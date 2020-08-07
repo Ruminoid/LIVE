@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Helios.Concurrency;
 using OpenGL;
 using Ruminoid.Common.Renderer.Core;
+using Ruminoid.Common.Utilities.Tasks;
 using Spout.Interop;
 
 namespace Ruminoid.LIVE.Core
