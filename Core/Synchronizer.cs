@@ -283,6 +283,7 @@ namespace Ruminoid.LIVE.Core
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", WorkingState.Unknown));
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Sender", WorkingState.Unknown));
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", WorkingState.Unknown));
+            GC.Collect();
         }
 
         #endregion
