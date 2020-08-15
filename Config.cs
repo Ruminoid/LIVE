@@ -49,7 +49,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string memSize = "500";
+        private string memSize = "1000";
 
         public string MemSize
         {
@@ -88,7 +88,7 @@ namespace Ruminoid.LIVE
         }
 
         [JsonProperty]
-        private string frameRate = "60";
+        private string frameRate = "30";
 
         public string FrameRate
         {
