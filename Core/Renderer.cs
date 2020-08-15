@@ -83,7 +83,7 @@ namespace Ruminoid.LIVE.Core
             int frameRate,
             int threadCount,
             int glyphMax,
-            int bitmapMax) // todo more parameter
+            int bitmapMax) // TODO: More Parameter
         {
             _width = width;
             _height = height;
@@ -120,15 +120,13 @@ namespace Ruminoid.LIVE.Core
         {
             if (IsDispatching || _totalDataBytes > _maxMemory) return;
 
-            RenderState = WorkingState.Working;
-
             _currentRenderTasks = 0;
             int cur = _playerIndex;
 
             var bunch = new List<int>();
             for (int i = 0; i < _maxPerBunch * _maxPerSubbunch && cur < _totalFrames && cur <= _playerIndex + _maxPrerender; i++)
             {
-                // todo better algorithm
+                // TODO: Better Algorithm
                 while (_renderedData.ContainsKey(cur)) cur++;
                 if (!(cur < _totalFrames && cur <= _playerIndex + _maxPrerender)) break;
 
@@ -151,8 +149,8 @@ namespace Ruminoid.LIVE.Core
 
             if (!urgent && !memoryUrgent)
             {
-                PurgeState = WorkingState.Completed;
-                MemoryState = WorkingState.Completed;
+                PurgeState = WorkingState.Unknown;
+                MemoryState = WorkingState.Unknown;
                 return;
             }
 
@@ -170,20 +168,24 @@ namespace Ruminoid.LIVE.Core
         {
             if (urgent)
                 return index >= _playerIndex && index <= _playerIndex - 50;
-            return index >= _playerIndex - _maxPrerender / 10 && index <= _playerIndex + _maxPrerender;
+            return index >= _playerIndex - 10 && index <= _playerIndex + _maxPrerender; // TODO: Remove Static Number 10
         }
 
         private void OnRenderFinish(List<KeyValuePair<int, RenderedImage>> results)
         {
             foreach (var result in results)
             {
+                if (_renderedData.ContainsKey(result.Key))
+                {
+                    byte[] buffer = _renderedData[result.Key].Buffer;
+                    if (buffer != null) _totalDataBytes -= (ulong) buffer.Length;
+                }
+
                 _renderedData[result.Key] = result.Value;
                 _totalDataBytes += (ulong)result.Value.Buffer.Length;
             }
 
             _currentRenderTasks -= results.Count;
-
-            if (_currentRenderTasks == 0) RenderState = WorkingState.Completed;
 
             if (!IsDispatching)
             {
@@ -209,8 +211,21 @@ namespace Ruminoid.LIVE.Core
 
             Sender.Current.Send(image);
 
-            if (!IsDispatching && !_renderedData.ContainsKey(frame + _minPrerender))
+            if (_totalDataBytes > _maxMemory)
+                CheckPurge();
+
+            if (_renderedData.ContainsKey(frame + _minPrerender))
+                RenderState = WorkingState.Working;
+
+            if (_renderedData.ContainsKey(frame + _maxPrerender))
+                RenderState = WorkingState.Completed;
+
+            if (!IsDispatching && (!_renderedData.ContainsKey(frame + _minPrerender) ||
+                                   _renderedData[frame + _minPrerender] == null))
+            {
+                RenderState = WorkingState.Working;
                 DispatchRender();
+            }
         }
 
         private void Render(List<int> frames)
@@ -238,6 +253,8 @@ namespace Ruminoid.LIVE.Core
             foreach (var renderer in _renderers.Values)
                 renderer.Dispose();
             _renderCore.Dispose();
+
+            _renderedData = null;
         }
     }
 }
