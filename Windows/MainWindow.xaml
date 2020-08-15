@@ -244,6 +244,7 @@
                         <Grid Height="120" Width="80">
                             <visualIcon:Icon Type="Memory" Width="35" Height="35" Size="2"
                                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <ProgressBar x:Name="MemoryProgressBar" Style="{DynamicResource BlockProgressBarStyle}"/>
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
                                        Margin="-2,0,0,6" Text="内存" />
                         </Grid>
@@ -262,6 +263,7 @@
                         <Grid Height="120" Width="80">
                             <visualIcon:Icon Type="CaptureFrame" Width="35" Height="35" Size="2"
                                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" />
+                            <ProgressBar x:Name="RenderProgressBar" Style="{DynamicResource BlockProgressBarStyle}"/>
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom"
                                        Margin="-2,0,0,6" Text="渲染" />
                         </Grid>

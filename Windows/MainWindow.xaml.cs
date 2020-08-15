@@ -88,6 +88,7 @@ namespace Ruminoid.LIVE.Windows
             #endregion
 
             Synchronizer.Current.StateChanged += ChangeState;
+            Synchronizer.Current.ProgressChanged += ChangeProgress;
             Synchronizer.Current.InitializeCompleted += InitializeCompleted;
         }
 
@@ -140,6 +141,18 @@ namespace Ruminoid.LIVE.Windows
                         WorkingState.Failed => Colors.Red,
                         _ => Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1C)
                     };
+            });
+        }
+
+        private void ChangeProgress(object sender, Tuple<ulong, ulong, int, int> e)
+        {
+            if (e is null) return;
+            Dispatcher.Invoke(() =>
+            {
+                MemoryProgressBar.Maximum = e.Item2;
+                MemoryProgressBar.Value = e.Item1;
+                RenderProgressBar.Maximum = e.Item4;
+                RenderProgressBar.Value = e.Item3;
             });
         }
 

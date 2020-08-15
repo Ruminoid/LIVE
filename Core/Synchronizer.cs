@@ -59,6 +59,13 @@ namespace Ruminoid.LIVE.Core
         private Player _player;
         private Timer _timer;
 
+        private Timer _stateResetTimer;
+        private Timer _progressResetTimer;
+        private bool _stateResetFlag;
+        private bool _progressResetFlag;
+        private KeyValuePair<string, WorkingState>? _stateResetState;
+        private Tuple<ulong, ulong, int, int> _progressResetState;
+
         #endregion
 
         #region User Data
@@ -234,6 +241,43 @@ namespace Ruminoid.LIVE.Core
                 GlyphMax,
                 BitmapMax);
             _renderer.StateChanged += RendererOnStateChanged;
+            _renderer.ProgressChanged += RendererOnProgressChanged;
+            
+            _stateResetTimer = new Timer(1000)
+            {
+                AutoReset = false,
+                Enabled = false
+            };
+            _stateResetTimer.Elapsed += (o, args) =>
+            {
+                if (_stateResetState is null) _stateResetFlag = false;
+                else
+                {
+                    StateChanged?.Invoke(this, (KeyValuePair<string, WorkingState>) _stateResetState);
+                    _stateResetState = null;
+                    _stateResetFlag = true;
+                    _stateResetTimer.Stop();
+                    _stateResetTimer.Start();
+                }
+            };
+            _progressResetTimer = new Timer(1000)
+            {
+                AutoReset = false,
+                Enabled = false
+            };
+            _progressResetTimer.Elapsed += (o, args) =>
+            {
+                if (_progressResetState is null) _progressResetFlag = false;
+                else
+                {
+                    ProgressChanged?.Invoke(this, _progressResetState);
+                    _progressResetState = null;
+                    _progressResetFlag = true;
+                    _progressResetTimer.Stop();
+                    _progressResetTimer.Start();
+                }
+            };
+
             _timer = new Timer(1000 / (double) FrameRate)
             {
                 AutoReset = true,
@@ -248,12 +292,40 @@ namespace Ruminoid.LIVE.Core
 
         private void TimerTick(object sender, ElapsedEventArgs e) => _renderer.Send((int) Position.Time);
 
-        private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
-            StateChanged?.Invoke(this, e);
+        private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e)
+        {
+            if (_stateResetFlag)
+            {
+                _stateResetState = e;
+            }
+            else
+            {
+                StateChanged?.Invoke(this, e);
+                _stateResetFlag = true;
+                _stateResetState = null;
+                _stateResetTimer.Start();
+            }
+        }
+
+        private void RendererOnProgressChanged(object sender, Tuple<ulong, ulong, int, int> e)
+        {
+            if (_progressResetFlag)
+            {
+                _progressResetState = e;
+            }
+            else
+            {
+                ProgressChanged?.Invoke(this, e);
+                _progressResetFlag = true;
+                _progressResetState = null;
+                _progressResetTimer.Start();
+            }
+        }
 
         public event EventHandler InitializeCompleted;
 
         public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
+        public event EventHandler<Tuple<ulong, ulong, int, int>> ProgressChanged;
 
         private void PlayerOnPositionChanged(object sender, PositionChangedEventArgs e) =>
             Position.Time = (long) e.Position.TotalMilliseconds;
@@ -277,6 +349,7 @@ namespace Ruminoid.LIVE.Core
             Position.Time = 0;
             Position.Total = 0;
             _player.Dispose();
+            _renderer.ProgressChanged -= RendererOnProgressChanged;
             _renderer.StateChanged -= RendererOnStateChanged;
             _renderer.Dispose();
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Memory", WorkingState.Unknown));

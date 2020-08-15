@@ -16,7 +16,21 @@ namespace Ruminoid.LIVE.Core
         private FrameAdaptor _frameAdaptor;
 
         private Dictionary<int, RenderedImage> _renderedData = new Dictionary<int, RenderedImage>();
+
         private ulong _totalDataBytes = 0;
+
+        public ulong TotalDataBytes
+        {
+            get => _totalDataBytes;
+            set
+            {
+                _totalDataBytes = value;
+
+                ProgressChanged?.Invoke(this,
+                    new Tuple<ulong, ulong, int, int>(Math.Min(_totalDataBytes, _maxMemory), _maxMemory,
+                        _renderedData.Count, _totalFrames));
+            }
+        }
 
         private DedicatedThreadPool _renderPool;
         private DedicatedThreadPool _manipulatePool;
@@ -118,7 +132,7 @@ namespace Ruminoid.LIVE.Core
 
         private void DispatchRender()
         {
-            if (IsDispatching || _totalDataBytes > _maxMemory) return;
+            if (IsDispatching || TotalDataBytes > _maxMemory) return;
 
             _currentRenderTasks = 0;
             int cur = _playerIndex;
@@ -145,7 +159,7 @@ namespace Ruminoid.LIVE.Core
 
         private void CheckPurge(bool urgent = false)
         {
-            bool memoryUrgent = _totalDataBytes > _maxMemory;
+            bool memoryUrgent = TotalDataBytes > _maxMemory;
 
             if (!urgent && !memoryUrgent)
             {
@@ -159,7 +173,7 @@ namespace Ruminoid.LIVE.Core
 
             foreach (var s in _renderedData.Where(it => !WithinPrerenderRange(it.Key, urgent)).ToList())
             {
-                _totalDataBytes -= (uint)s.Value.Buffer.Length;
+                TotalDataBytes -= (uint)s.Value.Buffer.Length;
                 _renderedData.Remove(s.Key);
             }
         }
@@ -178,11 +192,11 @@ namespace Ruminoid.LIVE.Core
                 if (_renderedData.ContainsKey(result.Key))
                 {
                     byte[] buffer = _renderedData[result.Key].Buffer;
-                    if (buffer != null) _totalDataBytes -= (ulong) buffer.Length;
+                    if (buffer != null) TotalDataBytes -= (ulong) buffer.Length;
                 }
 
                 _renderedData[result.Key] = result.Value;
-                _totalDataBytes += (ulong)result.Value.Buffer.Length;
+                TotalDataBytes += (ulong)result.Value.Buffer.Length;
             }
 
             _currentRenderTasks -= results.Count;
@@ -211,7 +225,7 @@ namespace Ruminoid.LIVE.Core
 
             Sender.Current.Send(image);
 
-            if (_totalDataBytes > _maxMemory)
+            if (TotalDataBytes > _maxMemory)
                 CheckPurge();
 
             if (_renderedData.ContainsKey(frame + _minPrerender))
@@ -242,6 +256,7 @@ namespace Ruminoid.LIVE.Core
         #region Event Triggers & Processors
 
         public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
+        public event EventHandler<Tuple<ulong, ulong, int, int>> ProgressChanged;
 
         #endregion
 
