@@ -266,6 +266,7 @@ namespace Ruminoid.LIVE.Windows
 
         private void CollapseStoryBoard_OnCompleted(object sender, EventArgs e)
         {
+            Width = 800;
             Height = 230;
         }
     }
