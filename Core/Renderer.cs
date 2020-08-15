@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Ruminoid.Common.Renderer.Core;
 using Ruminoid.Common.Renderer.Utilities;
+using Ruminoid.Common.Utilities;
 using Ruminoid.Common.Utilities.Tasks;
 
 namespace Ruminoid.LIVE.Core
@@ -29,6 +30,49 @@ namespace Ruminoid.LIVE.Core
 
         private bool IsDispatching => _currentRenderTasks > 0;
 
+        #region Display Data
+
+        private WorkingState _renderState;
+
+        private WorkingState RenderState
+        {
+            get => _renderState;
+            set
+            {
+                if (_renderState != value)
+                    StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", value));
+                _renderState = value;
+            }
+        }
+
+        private WorkingState _purgeState;
+
+        private WorkingState PurgeState
+        {
+            get => _purgeState;
+            set
+            {
+                if (_purgeState != value)
+                    StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Purge", value));
+                _purgeState = value;
+            }
+        }
+
+        private WorkingState _memoryState;
+
+        private WorkingState MemoryState
+        {
+            get => _memoryState;
+            set
+            {
+                if (_memoryState != value)
+                    StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Memory", value));
+                _memoryState = value;
+            }
+        }
+
+        #endregion
+
         public Renderer(string assPath,
             int width,
             int height,
@@ -46,7 +90,7 @@ namespace Ruminoid.LIVE.Core
             _frameAdaptor = new FrameAdaptor(frameRate, total);
             _minPrerender = minRenderFrame;
             _maxPrerender = maxRenderFrame;
-            _maxMemory = (ulong)memSize;
+            _maxMemory = (ulong)(memSize * 1024 * 1024);
             _maxPerBunch = threadCount;
             _maxPerSubbunch = 8;
             _playerIndex = 0;
@@ -75,6 +119,9 @@ namespace Ruminoid.LIVE.Core
         private void DispatchRender()
         {
             if (IsDispatching || _totalDataBytes > _maxMemory) return;
+
+            RenderState = WorkingState.Working;
+
             _currentRenderTasks = 0;
             int cur = _playerIndex;
 
@@ -100,8 +147,17 @@ namespace Ruminoid.LIVE.Core
 
         private void CheckPurge(bool urgent = false)
         {
-            if (!urgent && _totalDataBytes <= _maxMemory)
+            bool memoryUrgent = _totalDataBytes > _maxMemory;
+
+            if (!urgent && !memoryUrgent)
+            {
+                PurgeState = WorkingState.Completed;
+                MemoryState = WorkingState.Completed;
                 return;
+            }
+
+            PurgeState = urgent ? WorkingState.Failed : WorkingState.Working;
+            MemoryState = memoryUrgent ? WorkingState.Failed : WorkingState.Working;
 
             foreach (var s in _renderedData.Where(it => !WithinPrerenderRange(it.Key, urgent)).ToList())
             {
@@ -127,6 +183,8 @@ namespace Ruminoid.LIVE.Core
 
             _currentRenderTasks -= results.Count;
 
+            if (_currentRenderTasks == 0) RenderState = WorkingState.Completed;
+
             if (!IsDispatching)
             {
                 CheckPurge();
@@ -137,8 +195,9 @@ namespace Ruminoid.LIVE.Core
         private void SendOnDispatcher(int frame)
         {
             _playerIndex = frame;
-            if (!_renderedData.TryGetValue(frame, out var image))
+            if (!_renderedData.TryGetValue(frame, out RenderedImage image))
             {
+                RenderState = WorkingState.Failed;
                 if (IsDispatching) return;
                 CheckPurge(true);
                 DispatchRender();
@@ -164,6 +223,12 @@ namespace Ruminoid.LIVE.Core
             }
             _manipulatePool.QueueUserWorkItem(() => OnRenderFinish(results));
         }
+
+        #region Event Triggers & Processors
+
+        public event EventHandler<KeyValuePair<string, WorkingState>> StateChanged;
+
+        #endregion
 
         public void Dispose()
         {

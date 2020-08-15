@@ -90,8 +90,7 @@ namespace Ruminoid.LIVE.Core
                 _deviceContext.MakeCurrent(_glContext);
                 var (decoded, nBuffer) = AssRenderCore.Decode(buffer, image);
                 buffer = nBuffer;
-                //lock (_senderLocker)
-                //{
+
                 fixed (byte* unmanaged = decoded.Buffer)
                 {
                     _sender.SendImage(
@@ -103,17 +102,11 @@ namespace Ruminoid.LIVE.Core
                         0);
                 }
             });
-
-            //}
         }
 
         #endregion
 
         #region Dispose
-
-        public void Release()
-        {
-        }
 
         public void Dispose()
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -233,7 +233,7 @@ namespace Ruminoid.LIVE.Core
                 ThreadCount,
                 GlyphMax,
                 BitmapMax);
-            //_renderer.StateChanged += RendererOnStateChanged;
+            _renderer.StateChanged += RendererOnStateChanged;
             _timer = new Timer(1000 / (double) FrameRate)
             {
                 AutoReset = true,
@@ -248,8 +248,8 @@ namespace Ruminoid.LIVE.Core
 
         private void TimerTick(object sender, ElapsedEventArgs e) => _renderer.Send((int) Position.Time);
 
-        //private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
-            //StateChanged?.Invoke(this, e);
+        private void RendererOnStateChanged(object sender, KeyValuePair<string, WorkingState> e) =>
+            StateChanged?.Invoke(this, e);
 
         public event EventHandler InitializeCompleted;
 
@@ -277,7 +277,7 @@ namespace Ruminoid.LIVE.Core
             Position.Time = 0;
             Position.Total = 0;
             _player.Dispose();
-            //_renderer.StateChanged -= RendererOnStateChanged;
+            _renderer.StateChanged -= RendererOnStateChanged;
             _renderer.Dispose();
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Memory", WorkingState.Unknown));
             StateChanged?.Invoke(this, new KeyValuePair<string, WorkingState>("Render", WorkingState.Unknown));
